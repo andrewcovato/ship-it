@@ -204,7 +204,7 @@ Invoke the visual-explainer skill for all visual artifacts. Output to `.project/
 | UX spec creation | User flow diagram | mermaid-flowchart.html |
 | Roadmap change | Timeline visualization | CSS timeline |
 | Execution plan creation | Sprint timeline + dependencies | CSS timeline + Mermaid gantt |
-| Every session start | Kanban board | Dashboard (CSS Grid card layout) |
+| Every session start | Kanban board (update, not regenerate) | Dashboard (CSS Grid card layout) |
 | Major pivot | Before/after architecture | architecture.html (two versions) |
 
 **Invocation pattern:**
@@ -218,8 +218,15 @@ Generate a [type] for [subject]. Write to .project/mocks/[filename].html and ope
 - Card content: Feature/task name, sprint alignment, T-shirt size
 - Current sprint cards get a visual accent (colored border/badge)
 - KPI summary at top: total tasks, % complete, blockers count
-- Auto-generated at session start and after `/ship-wrap`
-- Overwritten each time (not versioned — it's a live view)
+- Updated at session start and after `/ship-wrap`
+
+**Kanban continuity rules (CRITICAL):**
+- If `board.html` already exists, it is the **source of truth** for card content, column placement, and wording. Read it FIRST.
+- ONLY make changes that are justified by diffs in the underlying data files (`state.json`, `milestones.md`, `execution-plan.md`, `backlog.md`).
+- NEVER rewrite card titles, descriptions, or column placements that haven't changed in the source data.
+- NEVER re-interpret or rephrase existing cards — preserve their exact wording unless the underlying task/requirement changed.
+- When updating: identify what changed since the last board state, apply ONLY those deltas, preserve everything else.
+- If no underlying data changed, do NOT regenerate the board — leave it as-is.
 
 Auto-regenerate architecture diagram when `architecture.md` changes significantly.
 

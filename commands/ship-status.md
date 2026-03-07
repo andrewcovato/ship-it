@@ -22,7 +22,7 @@ Read `./references/session-protocol.md` for the full session start protocol.
 
    Blockers: [none | list]
    ```
-4. Generate kanban board → `.project/mocks/board.html`, open in browser
+4. Update kanban board → if `.project/mocks/board.html` exists, read it first as source of truth and apply only data-driven changes; if not, generate fresh. Open in browser.
 5. Check proactive triggers (read `./references/proactive-triggers.md`):
    - Backlog items related to current sprint area?
    - Docs stale (>5 sessions since update)?

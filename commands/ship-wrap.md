@@ -45,8 +45,8 @@ If any document had a major version change, archive the old version to `.project
 - If velocity differs from estimate → re-scope future sprints
 - Note parallelization opportunities discovered
 
-### 7. Generate Kanban Board
-Regenerate `.project/mocks/board.html` with updated state. Open in browser.
+### 7. Update Kanban Board
+If `.project/mocks/board.html` exists, read it first as the source of truth. Apply ONLY the changes from this session (tasks completed, blockers added/resolved, sprint advanced, etc.). Preserve all card content that hasn't changed. If the board doesn't exist, generate fresh. Open in browser.
 
 ### 8. Next-Session Guidance
 Print:

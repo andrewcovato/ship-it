@@ -37,8 +37,17 @@ Priorities:
 Blockers: [none | list]
 ```
 
-### Step 3: Generate Kanban Board
-Generate `.project/mocks/board.html` using visual-explainer. Current sprint items highlighted. Open in browser.
+### Step 3: Update Kanban Board
+If `.project/mocks/board.html` already exists:
+1. Read the existing board — it is the **source of truth** for card content and column placement
+2. Compare against current `state.json`, `milestones.md`, `execution-plan.md`, and `backlog.md`
+3. Apply ONLY the changes justified by diffs in those source files (e.g., task moved to done, new blocker, sprint advanced)
+4. Preserve all card titles, descriptions, and placements that haven't changed in the underlying data
+5. If nothing changed, skip board update entirely
+
+If `board.html` does NOT exist, generate it fresh using visual-explainer. Current sprint items highlighted.
+
+Open in browser.
 
 ### Step 4: Check Proactive Triggers
 - Are there backlog items related to the current sprint area? → Surface them
