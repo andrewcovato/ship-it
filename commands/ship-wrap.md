@@ -46,7 +46,7 @@ If any document had a major version change, archive the old version to `.project
 - Note parallelization opportunities discovered
 
 ### 7. Update Kanban Board
-If `.project/mocks/board.html` exists, read it first as the source of truth. Apply ONLY the changes from this session (tasks completed, blockers added/resolved, sprint advanced, etc.). Preserve all card content that hasn't changed. If the board doesn't exist, generate fresh. Open in browser.
+Use the locked template at `./references/kanban-template.html` (do NOT use visual-explainer for the board). If `.project/mocks/board.html` exists, read it first as the source of truth. Apply ONLY the changes from this session (tasks completed, blockers added/resolved, sprint advanced, etc.). Preserve all card content that hasn't changed. If the board doesn't exist, generate fresh from the locked template. Open in browser.
 
 ### 8. Next-Session Guidance
 Print:

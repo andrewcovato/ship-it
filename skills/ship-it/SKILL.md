@@ -214,10 +214,12 @@ Generate a [type] for [subject]. Write to .project/mocks/[filename].html and ope
 ```
 
 **Kanban board** (`.project/mocks/board.html`):
-- Columns: Backlog | Up Next | In Progress | Done | Blocked
-- Card content: Feature/task name, sprint alignment, T-shirt size
-- Current sprint cards get a visual accent (colored border/badge)
-- KPI summary at top: total tasks, % complete, blockers count
+- Uses a **locked HTML/CSS template** at `./references/kanban-template.html` — the layout, CSS, column order, card structure, and KPI bar are FIXED and MUST NOT change between sessions.
+- Do NOT use visual-explainer for the kanban board. Use the locked template.
+- Columns (fixed order): Backlog | Up Next | In Progress | Done | Blocked
+- Card content: Feature/task name (exact from source data), sprint badge, T-shirt size badge
+- Current sprint cards use `card--active-sprint` class
+- KPI summary at top: total tasks, % complete, blockers count, current sprint name
 - Updated at session start and after `/ship-wrap`
 
 **Kanban continuity rules (CRITICAL):**

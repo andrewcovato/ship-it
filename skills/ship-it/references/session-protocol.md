@@ -38,14 +38,17 @@ Blockers: [none | list]
 ```
 
 ### Step 3: Update Kanban Board
+Use the locked template at `./references/kanban-template.html` — do NOT use visual-explainer for the kanban board.
+
 If `.project/mocks/board.html` already exists:
 1. Read the existing board — it is the **source of truth** for card content and column placement
 2. Compare against current `state.json`, `milestones.md`, `execution-plan.md`, and `backlog.md`
 3. Apply ONLY the changes justified by diffs in those source files (e.g., task moved to done, new blocker, sprint advanced)
 4. Preserve all card titles, descriptions, and placements that haven't changed in the underlying data
-5. If nothing changed, skip board update entirely
+5. Update KPI values, column counts, and header meta line
+6. If nothing changed, skip board update entirely
 
-If `board.html` does NOT exist, generate it fresh using visual-explainer. Current sprint items highlighted.
+If `board.html` does NOT exist, generate it fresh from the locked template. Replace `{{PLACEHOLDER}}` values with real data.
 
 Open in browser.
 
