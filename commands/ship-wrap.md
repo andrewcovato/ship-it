@@ -45,8 +45,10 @@ If any document had a major version change, archive the old version to `.project
 - If velocity differs from estimate → re-scope future sprints
 - Note parallelization opportunities discovered
 
-### 7. Update Kanban Board
-Use the locked template at `./references/kanban-template.html` (do NOT use visual-explainer for the board). If `.project/mocks/board.html` exists, read it first as the source of truth. Apply ONLY the changes from this session (tasks completed, blockers added/resolved, sprint advanced, etc.). Preserve all card content that hasn't changed. If the board doesn't exist, generate fresh from the locked template. Open in browser.
+### 7. Update Kanban
+Update KANBAN.md (data) FIRST, then render board.html (presentation).
+- Read `.project/KANBAN.md` as the data authority. Apply ONLY changes from this session (tasks completed, blockers added/resolved, sprint advanced). Preserve all card text that hasn't changed. If KANBAN.md doesn't exist, create it.
+- Render board.html from the updated KANBAN.md using the locked template (or user's custom template at `.project/mocks/kanban-template.html` if present). Open in browser.
 
 ### 8. Next-Session Guidance
 Print:

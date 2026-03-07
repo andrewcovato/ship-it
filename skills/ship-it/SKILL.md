@@ -213,22 +213,29 @@ Load the visual-explainer skill. Read the [template] and CSS patterns references
 Generate a [type] for [subject]. Write to .project/mocks/[filename].html and open in browser.
 ```
 
+**Kanban data** (`.project/KANBAN.md`):
+- The **single source of truth** for all board card data. Read `./references/doc-templates.md` for the KANBAN.md template.
+- Cards are listed under column headers (Backlog, Up Next, In Progress, Done, Blocked) with status markers.
+- Card text MUST be copied verbatim from `milestones.md` or `backlog.md` — never paraphrase.
+- When a card moves between columns, its text MUST remain identical — only the status marker and section change.
+- Updated at session start (if state changed) and at session end.
+
 **Kanban board** (`.project/mocks/board.html`):
-- Uses a **locked HTML/CSS template** at `./references/kanban-template.html` — the layout, CSS, column order, card structure, and KPI bar are FIXED and MUST NOT change between sessions.
-- Do NOT use visual-explainer for the kanban board. Use the locked template.
+- Rendered from KANBAN.md using the **locked HTML/CSS template** at `./references/kanban-template.html`.
+- The layout, CSS, column order, card structure, and KPI bar are FIXED and MUST NOT change between sessions.
+- Users MAY provide their own HTML template at `.project/mocks/kanban-template.html` — if present, use it instead of the default.
+- Do NOT use visual-explainer for the kanban board.
 - Columns (fixed order): Backlog | Up Next | In Progress | Done | Blocked
-- Card content: Feature/task name (exact from source data), sprint badge, T-shirt size badge
 - Current sprint cards use `card--active-sprint` class
 - KPI summary at top: total tasks, % complete, blockers count, current sprint name
-- Updated at session start and after `/ship-wrap`
 
-**Kanban continuity rules (CRITICAL):**
-- If `board.html` already exists, it is the **source of truth** for card content, column placement, and wording. Read it FIRST.
-- ONLY make changes that are justified by diffs in the underlying data files (`state.json`, `milestones.md`, `execution-plan.md`, `backlog.md`).
-- NEVER rewrite card titles, descriptions, or column placements that haven't changed in the source data.
-- NEVER re-interpret or rephrase existing cards — preserve their exact wording unless the underlying task/requirement changed.
-- When updating: identify what changed since the last board state, apply ONLY those deltas, preserve everything else.
-- If no underlying data changed, do NOT regenerate the board — leave it as-is.
+**Kanban update protocol (CRITICAL):**
+1. Read `.project/KANBAN.md` — this is the authority
+2. Compare against current `state.json`, `milestones.md`, `execution-plan.md`, `backlog.md`
+3. Apply ONLY changes justified by diffs in those source files
+4. Update KANBAN.md FIRST with the changes
+5. Then render board.html from the updated KANBAN.md using the locked template (or user's custom template if `.project/mocks/kanban-template.html` exists)
+6. If no underlying data changed, do NOT update either file
 
 Auto-regenerate architecture diagram when `architecture.md` changes significantly.
 

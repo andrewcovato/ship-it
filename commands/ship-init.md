@@ -46,14 +46,15 @@ After discovery, read `./references/doc-templates.md` and generate docs in this 
 7. `roadmap/execution-plan.md` — session-sized sprints with parallelization (read `./references/execution-protocol.md`)
 8. Seed `backlog/exploration.md` with discussed-but-not-spec'd features
 9. Generate architecture diagram via visual-explainer → `.project/mocks/mock-001-architecture.html`, open in browser
-10. Update project CLAUDE.md with `## Project Management` pointer and `## Design Principles`
+10. Create `.project/KANBAN.md` from `milestones.md`, `execution-plan.md`, and `backlog/exploration.md` — read `./references/doc-templates.md` for the KANBAN.md template format. Card text MUST be copied verbatim from source docs.
+11. Update project CLAUDE.md with `## Project Management` pointer and `## Design Principles`
 
 ## Session Wrap-Up
 Read `./references/session-protocol.md` and run the session end protocol:
 - Generate session notes
 - Generate HANDOFF.md
 - Update state.json (phase → "planning")
-- Generate kanban board → `.project/mocks/board.html`, open in browser
+- Render kanban board from KANBAN.md using the locked template → `.project/mocks/board.html`, open in browser
 - Print next sprint name and resume command
 
 $@

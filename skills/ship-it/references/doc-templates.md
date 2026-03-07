@@ -657,3 +657,54 @@ This document is REGENERATED (complete rewrite) at the end of every session. NEV
 |------|--------|
 | [path] | [created/updated/archived] |
 ```
+
+## KANBAN.md
+
+The kanban data file. Lives at `.project/KANBAN.md`. This is the **single source of truth** for all board card data. The HTML board (`board.html`) is rendered from this file.
+
+Cards are listed under column headers. Each card is a single line with a fixed format. Card text MUST match task names from `milestones.md` or `backlog.md` exactly — do not paraphrase or re-interpret.
+
+When updating the kanban, update KANBAN.md FIRST, then render the HTML from it.
+
+```markdown
+# Kanban
+
+**Sprint:** [Sprint N — Sprint Name]
+**Milestone:** [M-name]
+**Phase:** [phase]
+**Session:** [N]
+
+## Backlog
+- [ ] [Task name from backlog.md] | [S/M/L/XL]
+
+## Up Next
+- [ ] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL]
+
+## In Progress
+- [~] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL]
+
+## Done
+- [x] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL]
+
+## Blocked
+- [!] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL] | Blocker: [B-NNN description]
+```
+
+### Card line format
+```
+- [status] Task name exactly as in source | Sprint N | Size | optional blocker
+```
+
+Status markers:
+- `[ ]` — not started (Backlog, Up Next)
+- `[~]` — in progress
+- `[x]` — done
+- `[!]` — blocked
+
+### Rules
+- Card text MUST be copied verbatim from `milestones.md` or `backlog.md` — never paraphrase
+- Cards move between sections by changing their status marker and section
+- When a card moves, its text MUST remain identical
+- Backlog cards have no sprint assignment
+- The header metadata (Sprint, Milestone, Phase, Session) is updated each session
+- KANBAN.md is the authority — if KANBAN.md and board.html disagree, KANBAN.md wins

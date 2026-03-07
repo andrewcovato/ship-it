@@ -22,7 +22,7 @@ Read `./references/session-protocol.md` for the full session start protocol.
 
    Blockers: [none | list]
    ```
-4. Update kanban board using the locked template at `./references/kanban-template.html` (do NOT use visual-explainer for the board). If `.project/mocks/board.html` exists, read it first as source of truth and apply only data-driven changes. If not, generate fresh from the locked template. Open in browser.
+4. Update kanban: read `.project/KANBAN.md` as the data authority, apply only data-driven changes from source files, update KANBAN.md first, then render board.html from it using the locked template (or user's custom template at `.project/mocks/kanban-template.html` if present). If KANBAN.md doesn't exist, create it. Open board in browser.
 5. Check proactive triggers (read `./references/proactive-triggers.md`):
    - Backlog items related to current sprint area?
    - Docs stale (>5 sessions since update)?

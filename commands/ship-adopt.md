@@ -36,13 +36,14 @@ Map existing artifacts to the MECE doc suite. Classify each as: exists+current, 
 4. Build `state.json` from reality (read `./references/state-schema.md`)
 5. Seed all three backlogs (read `./references/backlog-protocol.md`)
 6. Generate execution plan (read `./references/execution-protocol.md`)
-7. Generate architecture diagram via visual-explainer → `.project/mocks/mock-001-architecture.html`
-8. Update CLAUDE.md
+7. Create `.project/KANBAN.md` from milestones, execution plan, and backlogs — card text copied verbatim from source docs (read `./references/doc-templates.md` for KANBAN.md template)
+8. Generate architecture diagram via visual-explainer → `.project/mocks/mock-001-architecture.html`
+9. Update CLAUDE.md
 
 ## Phase 6: Onboarding Summary
 1. Present "state of the union" — what was archived, reorganized, generated, and flagged
 2. Iterate on corrections with user
-3. Generate kanban board → `.project/mocks/board.html`, open in browser
+3. Render kanban board from KANBAN.md using the locked template → `.project/mocks/board.html`, open in browser
 4. Run session wrap-up (read `./references/session-protocol.md`)
 
 $@

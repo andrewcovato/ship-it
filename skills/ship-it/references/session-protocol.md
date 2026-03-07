@@ -37,18 +37,15 @@ Priorities:
 Blockers: [none | list]
 ```
 
-### Step 3: Update Kanban Board
-Use the locked template at `./references/kanban-template.html` — do NOT use visual-explainer for the kanban board.
+### Step 3: Update Kanban
+Update KANBAN.md (data layer) FIRST, then render board.html (presentation layer).
 
-If `.project/mocks/board.html` already exists:
-1. Read the existing board — it is the **source of truth** for card content and column placement
-2. Compare against current `state.json`, `milestones.md`, `execution-plan.md`, and `backlog.md`
-3. Apply ONLY the changes justified by diffs in those source files (e.g., task moved to done, new blocker, sprint advanced)
-4. Preserve all card titles, descriptions, and placements that haven't changed in the underlying data
-5. Update KPI values, column counts, and header meta line
-6. If nothing changed, skip board update entirely
+**KANBAN.md** (`.project/KANBAN.md`):
+If it exists, read it as the authority. Compare against `state.json`, `milestones.md`, `execution-plan.md`, `backlog.md`. Apply ONLY changes justified by diffs. Preserve all card text that hasn't changed. If nothing changed, skip.
+If it doesn't exist, create it from the template in `doc-templates.md`.
 
-If `board.html` does NOT exist, generate it fresh from the locked template. Replace `{{PLACEHOLDER}}` values with real data.
+**board.html** (`.project/mocks/board.html`):
+Render from KANBAN.md using the HTML template. If `.project/mocks/kanban-template.html` exists (user's custom template), use that. Otherwise use `./references/kanban-template.html` (default). Do NOT use visual-explainer for the board.
 
 Open in browser.
 
