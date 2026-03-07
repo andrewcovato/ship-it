@@ -1,0 +1,8 @@
+{
+  "name": "ship-it",
+  "description": "CTO/CPO co-pilot for multi-session software project management. Manages project state, MECE documentation, roadmaps, execution plans, backlogs, and session handoffs.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Andrew Covato"
+  }
+}
