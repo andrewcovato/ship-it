@@ -22,9 +22,15 @@ Detect the environment and choose the right mode:
    - Docs (prd, tech-spec, architecture): run discovery questions for that doc only, then generate
    - Infrastructure (state.json, KANBAN.md): generate from existing docs
    - Plan hierarchy: build phases/milestones/sprints/tasks in state.json, generate plan.md as derived view
-   Never overwrite existing files.
 
-4. **`.project/` exists and complete** → Warn: "Project already initialized. Use `/ship-go` to execute or just ask me questions." Do not re-initialize.
+   For existing files that don't match current templates (read `./references/doc-templates.md`):
+   - Archive the old version to `.project/archive/` first
+   - Reformat into the current template structure, preserving all content and intent
+   - Report: "Reformatted [file] to match current template. Old version archived."
+
+4. **`.project/` exists and complete** → Check format compliance. Compare each file against current templates.
+   - If all files match: "Project initialized and up to date. Use `/ship-go` to execute or just ask me questions."
+   - If format mismatches found: archive old versions, reformat to current templates, report changes. Same reformat logic as repair mode above.
 
 After any mode completes, run session wrap-up per `./references/session-protocol.md`.
 
