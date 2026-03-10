@@ -6,14 +6,14 @@ This protocol governs how `/ship-go` executes sprint tasks autonomously, integra
 
 ```
 /ship-go
-  1. Load sprint → read execution-plan.md for current sprint tasks
+  1. Load sprint → read state.json active_sprint for current tasks
   2. Detect superpowers → try loading superpowers:writing-plans
   3. For each task:
      a. Check human gates (→ pause if gate hit)
      b. Build context packet from project docs
      c. Decompose → superpowers:writing-plans (or inline decomposition)
      d. Execute → superpowers:executing-plans (or direct execution)
-     e. Update ship-it state (milestones, state.json, KANBAN.md)
+     e. Update state.json, regenerate derived views (KANBAN.md, board.html)
   4. After each batch (3-5 tasks) → status checkpoint
   5. Sprint complete → auto-wrap
 ```
@@ -36,9 +36,7 @@ On first `/ship-go` invocation for a project:
 ### Step 1: Load Sprint Context
 
 ```
-Read .project/state.json → active_sprint
-Read .project/roadmap/execution-plan.md → current sprint tasks
-Read .project/roadmap/milestones.md → acceptance criteria for each task
+Read .project/state.json → active_sprint (tasks, statuses, acceptance criteria, dependencies)
 
 Validate:
 - Sprint exists and has tasks with status != "done"
@@ -66,13 +64,13 @@ Read the task description and acceptance criteria. Scan for gate triggers (see `
 Assemble context for the task from project docs:
 
 ```
-Task: [name from milestones.md]
-Acceptance Criteria: [from milestones.md]
+Task: [name from state.json active_sprint.tasks]
+Acceptance Criteria: [from state.json active_sprint.tasks[].acceptance_criteria]
 Architecture Context: [relevant section from architecture.md]
 Tech Stack: [from PROJECT.md]
-Relevant ADRs: [from decisions/ — only those affecting this task's area]
+Relevant ADRs: [from decisions/ — cross-reference state.json decisions[].impact]
 Constraints: [from state.json things_not_to_redo]
-Dependencies: [from execution-plan.md — what this task builds on]
+Dependencies: [from state.json active_sprint.tasks[].dependencies]
 ```
 
 #### 3c. Decompose (with superpowers)
@@ -142,11 +140,11 @@ Execute the inline plan directly:
 After each task completes:
 
 ```
-Update milestones.md → mark task as done
 Update state.json:
-  - active_sprint.completed_tasks += 1
-  - active_milestone.completed_tasks += 1
-Update KANBAN.md → move card from "In Progress" to "Done"
+  - active_sprint.tasks[ID].status = "done"
+  - phases[].milestones[].tasks[ID].status = "done" (mirror in full hierarchy)
+  - Recalculate current.sprint_progress and current.milestone_progress
+Regenerate KANBAN.md from state.json → render board.html
 Log: "Task [ID] complete: [name]"
 ```
 

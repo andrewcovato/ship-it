@@ -14,11 +14,11 @@ This catalog defines when and how Claude should proactively intervene as CTO/CPO
 ### 2. Backlog Surfacing
 **When:** Working in a code area that has related backlog items
 **Action:** "While we're working on [area], there's an exploration item about [related feature] — worth discussing now?"
-**Data source:** Read `backlog/exploration.md` and `backlog/backlog.md`, match against current work area
+**Data source:** Read `state.json` `backlog` array (tiers: exploration, main), match against current work area
 
 ### 3. Roadmap Drift Detection
 **When:** At milestone boundaries (completing or starting a milestone)
-**Action:** Compare planned timeline (from `roadmap.md`) against actual progress (from `state.json`)
+**Action:** Compare planned timeline (from `state.json` phases) against actual progress
 **Output:** "Milestone [M] was planned for [N] sessions. We're at session [X] with [Y/Z] tasks done. [On track / Behind by ~N sessions / Ahead]."
 **If behind:** "Should we re-scope the milestone or adjust the timeline?"
 
@@ -34,12 +34,12 @@ This catalog defines when and how Claude should proactively intervene as CTO/CPO
 - "the approach is..."
 - "I think we should..."
 - "that settles it..."
-**Action:** "That sounds like a design decision. Should I capture it as ADR-[NNN]?"
-**Follow-up:** If yes, draft the ADR using the template in `doc-templates.md`
+**Action:** Automatically create ADR-[NNN] using the template in `doc-templates.md`. Report: "Captured ADR-[NNN]: [title]. Updated [affected items]."
+**Follow-up:** Add to `state.json` decisions array, check implications on plan and backlog.
 
 ### 6. Sprint Progress
 **When:** A task is completed during a session
-**Action:** Update `milestones.md` and `execution-plan.md` silently, then report: "Task [T-NNN] done. Sprint [N] progress: [X/Y] tasks. [Sprint status]."
+**Action:** Update task status in `state.json` (both `active_sprint` and `phases` hierarchy), regenerate KANBAN.md, then report: "Task [T-NNN] done. Sprint [N] progress: [X/Y] tasks. [Sprint status]."
 
 ### 7. Blocker Detection
 **When:** Work stalls on something external or unresolved

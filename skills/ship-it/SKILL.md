@@ -11,9 +11,10 @@ description: >
   to break down a feature into tasks. Even casual mentions of "the project",
   "the plan", "what's next", or "where were we" should trigger this skill when
   a .project/ directory is present.
-  Commands: /ship-init (new or adopt project), /ship-go (autonomous execution),
-  /ship-decide (capture decisions). All other operations (status, wrap, backlog,
-  board, roadmap, plan) happen automatically or via natural language.
+  Commands: /ship-init (new or adopt project), /ship-go (autonomous execution).
+  All other operations (status, decisions, wrap, backlog, board, roadmap, plan)
+  happen automatically or via natural language. Decisions are detected and
+  captured proactively — no command needed.
 metadata:
   author: andrewcovato
   version: "0.2.0"
@@ -54,17 +55,20 @@ Check if `.project/` directory exists in the working directory.
 |-------|------|--------|
 | `/ship-init` | New project, existing project, or incomplete `.project/` | Auto-detects greenfield vs adopt vs repair mode |
 | `/ship-go` | Ready to execute | Autonomous sprint execution with human gates |
-| `/ship-decide` | Explicit decision capture | ADR creation (also auto-invoked by `/ship-go` at decision gates) |
 | Auto-resume | `.project/` detected on session start | Read state + HANDOFF, present status, generate kanban board |
 
-### Session Start Protocol
+**Decision capture is fully proactive.** When conversation reveals a decision (architecture choice, technology selection, approach trade-off), detect it and create an ADR automatically. No command needed. See Section 9 (Proactive Behaviors).
+
+### Session Start Protocol (Tiered Loading)
 Read `./references/session-protocol.md` for full details.
-1. Read `.project/state.json` — extract phase, active milestone, sprint, blockers
-2. Read `.project/sessions/HANDOFF.md` — extract last session context
+1. **Tier 0:** Read `.project/state.json` fields: `current`, `active_sprint`, `last_session`, `blockers` (~50-80 lines)
+2. **Tier 1:** Read `.project/sessions/HANDOFF.md` — session narrative context (~30-50 lines)
 3. Present concise status with metrics: session number, phase, milestone progress, current sprint, priorities
 4. Generate kanban board → `.project/mocks/board.html`, open in browser
-5. Check proactive triggers (see Section 7)
+5. Check proactive triggers (see Section 9)
 6. Increment `session_count` in `state.json`
+
+Do NOT read full `state.json` (phases array, backlog, decisions) at session start. Load Tier 2 on-demand when working on tasks or pivoting.
 
 ### Mid-Session Checkpoint
 When context grows large (many files read, long conversation), proactively offer:
@@ -86,12 +90,15 @@ Read `./references/session-protocol.md` for full details.
 
 ### Natural Language Handling
 When a `.project/` is active, respond to natural requests without dedicated commands:
-- "Show me the plan" / "what's in the next sprint" → read and present execution-plan.md
-- "Show the roadmap" / "update the roadmap" → read/update roadmap.md
-- "Show the board" → update KANBAN.md and render board.html
+- "Show me the plan" / "what's in the next sprint" → read `state.json` phases + active sprint, present detail view, generate sprint timeline via visual-explainer → `.project/mocks/mock-NNN-sprint-timeline.html`, open in browser
+- "Show the roadmap" → read `state.json` phases (summary level), present phase/milestone progress, generate timeline visualization via visual-explainer → `.project/mocks/mock-NNN-roadmap-timeline.html`, open in browser
+- "Update the roadmap/plan" → update `state.json` phases hierarchy, regenerate `plan.md`, archive previous version
+- "Show the board" / "show the kanban" → update KANBAN.md from source data, render board.html from locked template (see Section 10), open in browser
 - "Add X to the backlog" → add to appropriate backlog tier
-- "What's the status?" → present status with metrics
+- "What's the status?" → present status with metrics, update and render kanban board
 - "Wrap up" / "end session" → run session end protocol
+
+All "show" requests produce **visual HTML output** (via visual-explainer or locked templates), not raw markdown dumps. See Section 10 for invocation patterns.
 
 ## 3. First Session: Project Discovery (Greenfield Mode)
 
@@ -110,17 +117,16 @@ Ask 2-3 questions at a time. Accept brain dumps, bullet points, shorthand. Refle
 
 After discovery, generate docs in this order:
 1. Create `.project/` directory structure
-2. Initialize `state.json` (phase: "discovery", session: 1)
+2. Initialize `state.json` with full plan hierarchy: phases, milestones, sprints, tasks (see `./references/state-schema.md`)
 3. `PROJECT.md` — identity and elevator pitch
 4. `docs/prd.md` — requirements from discovery
 5. `docs/technical-spec.md` — implementation approach
 6. `docs/architecture.md` — component structure
-7. `roadmap/roadmap.md` + `roadmap/milestones.md` — phased build plan
-8. `roadmap/execution-plan.md` — session-sized sprints (see Section 10)
-9. Seed `backlog/exploration.md` with discussed-but-not-spec'd features
-10. Generate architecture diagram via visual-explainer → `.project/mocks/mock-001-architecture.html`
-11. Update project CLAUDE.md with design principles + pointer to `.project/`
-12. Run session wrap-up protocol
+7. Generate `plan.md` — derived human-readable view of `state.json` phases hierarchy
+8. Seed `backlog` array in `state.json` with discussed-but-not-spec'd features
+9. Generate architecture diagram via visual-explainer → `.project/mocks/mock-001-architecture.html`
+10. Update project CLAUDE.md with design principles + pointer to `.project/`
+11. Run session wrap-up protocol
 
 Read `./references/doc-templates.md` for templates of each document.
 
@@ -171,18 +177,18 @@ Ship-it integrates with the **superpowers** plugin (optional) for execution. If 
 If superpowers is not installed, ship-it falls back to direct execution (implement tasks inline with basic test-first pattern).
 
 ### Execution Loop
-1. Read current sprint from `execution-plan.md`
+1. Read `active_sprint` from `state.json` — tasks, statuses, dependencies
 2. For each task: check gates → build context packet → decompose → execute → update state
 3. After each batch (3-5 tasks): present status checkpoint
-4. Sprint complete: auto-wrap (session notes, HANDOFF.md, state.json, kanban)
+4. Sprint complete: auto-wrap (session notes, HANDOFF.md, state.json, regenerate derived views)
 5. Advance to next sprint or stop
 
 ### Task Context Packet
 For each task, assemble from project docs:
-- Task name + acceptance criteria (from `milestones.md`)
+- Task name + acceptance criteria (from `state.json` `active_sprint.tasks`)
 - Architecture context (from `architecture.md`)
 - Tech stack (from `PROJECT.md`)
-- Relevant ADRs (from `decisions/`)
+- Relevant ADRs (from `decisions/` — cross-reference `state.json` `decisions[].impact` for affected tasks)
 - Constraints (from `state.json` `things_not_to_redo`)
 
 ### Scope Override
@@ -199,7 +205,7 @@ During autonomous execution, certain tasks require human input before proceeding
 ### Gate Types
 | Type | Trigger | Action |
 |------|---------|--------|
-| Architecture Decision | Task requires choosing between approaches | Auto-invoke `/ship-decide`, capture ADR |
+| Architecture Decision | Task requires choosing between approaches | Pause, present options, capture ADR on resolution |
 | Deployment | Task involves deploy/release/production | Pause, show deploy instructions |
 | Human Testing | Acceptance criteria require visual/UX verification | Pause, provide test checklist |
 | External Dependency | Task needs API keys, credentials, external access | Pause, explain; continue other tasks |
@@ -225,23 +231,28 @@ Each doc has strict ownership boundaries. Read `./references/doc-templates.md` f
 | `api-spec.md` | Interface contracts, endpoints, schemas | Internal implementation |
 | `data-model.md` | Schema, entities, relationships, migrations | Business logic |
 | `ux-spec.md` | User flows, wireframes, interaction patterns | Backend behavior |
-| `roadmap.md` | Phases, milestones, high-level sequencing | Task details |
-| `milestones.md` | Tasks, subtasks, effort estimates, acceptance criteria | Strategic sequencing |
-| `execution-plan.md` | Session-sized sprints, parallelization, velocity | High-level timeline |
+| `plan.md` | Derived view of plan hierarchy (phases → milestones → sprints → tasks) | Is the source of truth (state.json is) |
+
+**Note:** `plan.md` is a **derived view** generated from `state.json`. The plan hierarchy (phases, milestones, sprints, tasks, acceptance criteria, dependencies) lives in `state.json`. `plan.md` is regenerated when the plan changes. Roadmap = summary view. Plan = detail view. Same data.
 
 ### Auto-Maintenance Rules
-You update docs automatically as conversations evolve:
+You update docs and state automatically as conversations evolve:
 - New requirement mentioned → update `prd.md`, inform user
-- Architecture decision made → create ADR in `decisions/`, update `architecture.md`
-- Feature deprioritized → adjust `roadmap.md` + `execution-plan.md`
-- New idea discussed but not spec'd → add to `backlog/exploration.md`
-- Technical shortcut taken → add to `backlog/tech-debt.md`
+- Architecture decision made → create ADR in `decisions/`, update `architecture.md`, add to `state.json` decisions array
+- Feature deprioritized → update `state.json` phases hierarchy, regenerate `plan.md`
+- New idea discussed but not spec'd → add to `state.json` backlog (tier: exploration)
+- Technical shortcut taken → add to `state.json` backlog (tier: tech-debt)
 - Data model changed → update `data-model.md`
+- Plan change of any kind → update `state.json`, regenerate `plan.md`
 
 Always inform the user: "I've updated [doc] to reflect [change]."
 
-### ADR Generation
-When a significant design choice is made, create `decisions/adr-NNN-<slugified-title>.md`. Read `./references/doc-templates.md` for the ADR template. ADRs are immutable once written — if superseded, create a new ADR that references the old one.
+### Proactive Decision Capture
+When conversation reveals a decision (architecture choice, technology selection, approach trade-off), **automatically** create `decisions/adr-NNN-<slugified-title>.md`. Read `./references/doc-templates.md` for the ADR template. ADRs are immutable once written — if superseded, create a new ADR that references the old one.
+
+**Detection signals:** "let's go with", "we decided", "use X instead of Y", choosing between approaches, rejecting an alternative, any statement that constrains future implementation choices.
+
+After creating an ADR: update `state.json` decisions array, check implications on backlog and plan, update affected task acceptance criteria if needed. Report: "Captured ADR-NNN: [title]. Updated [affected items]."
 
 ## 9. Proactive CTO/CPO Behaviors
 
@@ -252,7 +263,7 @@ Read `./references/proactive-triggers.md` for the full trigger catalog.
 - **Backlog surfacing**: When working on a related area, surface exploration items.
 - **Roadmap drift**: At milestone boundaries, compare planned vs actual timeline.
 - **Doc staleness**: Flag docs >5 sessions old in active development areas.
-- **Decision capture**: When conversation contains "let's go with", "we decided" → offer to create ADR.
+- **Decision capture**: When conversation contains "let's go with", "we decided", "use X instead of Y" → automatically create ADR (see Section 8).
 
 ### Strategic Triggers
 - **Pivot detection**: "This changes the product direction. Are we sure about this pivot?"
@@ -285,11 +296,10 @@ Generate a [type] for [subject]. Write to .project/mocks/[filename].html and ope
 ```
 
 **Kanban data** (`.project/KANBAN.md`):
-- The **single source of truth** for all board card data. Read `./references/doc-templates.md` for the KANBAN.md template.
+- A **derived view** generated from `state.json` (`active_sprint.tasks` + `backlog` + `blockers`). Read `./references/doc-templates.md` for the KANBAN.md template.
 - Cards are listed under column headers (Backlog, Up Next, In Progress, Done, Blocked) with status markers.
-- Card text MUST be copied verbatim from `milestones.md` or `backlog.md` — never paraphrase.
-- When a card moves between columns, its text MUST remain identical — only the status marker and section change.
-- Updated at session start (if state changed) and at session end.
+- Card text MUST match task names from `state.json` exactly — never paraphrase.
+- Regenerated from `state.json` whenever task statuses change. Never edited directly.
 
 **Kanban board** (`.project/mocks/board.html`):
 - Rendered from KANBAN.md using the **locked HTML/CSS template** at `./references/kanban-template.html`.
@@ -300,13 +310,11 @@ Generate a [type] for [subject]. Write to .project/mocks/[filename].html and ope
 - Current sprint cards use `card--active-sprint` class
 - KPI summary at top: total tasks, % complete, blockers count, current sprint name
 
-**Kanban update protocol (CRITICAL):**
-1. Read `.project/KANBAN.md` — this is the authority
-2. Compare against current `state.json`, `milestones.md`, `execution-plan.md`, `backlog.md`
-3. Apply ONLY changes justified by diffs in those source files
-4. Update KANBAN.md FIRST with the changes
-5. Then render board.html from the updated KANBAN.md using the locked template (or user's custom template if `.project/mocks/kanban-template.html` exists)
-6. If no underlying data changed, do NOT update either file
+**Kanban regeneration protocol (CRITICAL):**
+1. Read `state.json` — `active_sprint.tasks`, `backlog`, `blockers`, `current`
+2. Generate KANBAN.md from state data: task status → column assignment (pending=Up Next, doing=In Progress, done=Done, blocked=Blocked; backlog items=Backlog)
+3. Render board.html from KANBAN.md using the locked template (or user's custom template if `.project/mocks/kanban-template.html` exists)
+4. `state.json` is the authority. KANBAN.md and board.html are always regenerated, never patched.
 
 Auto-regenerate architecture diagram when `architecture.md` changes significantly.
 
@@ -314,40 +322,57 @@ Auto-regenerate architecture diagram when `architecture.md` changes significantl
 
 ## 11. State Management
 
-### state.json
-Machine-readable project state. Updated after every significant action. Read `./references/state-schema.md` for the full schema.
+### state.json — Single Source of Truth
+`state.json` is the **single source of truth** for all project state. All other files (plan.md, KANBAN.md, board.html, HANDOFF.md) are derived views regenerated from it. Never edit derived views directly.
 
-Key fields: `project_name`, `project_slug`, `current_phase` (discovery|planning|building|shipping), `session_count`, `last_session`, `active_milestone` (with progress), `active_sprint`, `roadmap_version`, `blockers`, `recent_decisions`, `backlog_stats`, `docs_status`, `things_not_to_redo`, `execution_mode`, `current_go_session`, `human_gates_log`.
+Read `./references/state-schema.md` for the full schema, tiered loading protocol, and sync rules.
+
+**Tier 0 (session start):** `current`, `active_sprint`, `last_session`, `blockers` — ~50-80 lines
+**Tier 2 (on-demand):** `phases` (full plan hierarchy), `backlog`, `decisions` — read when executing tasks or pivoting
+
+The `phases` array contains the complete plan hierarchy: Phase → Milestone → Sprint → Task. Progress rolls up deterministically. Backlog items are promoted to tasks by assigning them a task ID and sprint.
+
+### Derived Views
+| File | Generated From | Regenerate When |
+|------|---------------|-----------------|
+| `plan.md` | `state.json` phases array | Sprint advance, pivot/replan |
+| `KANBAN.md` | `state.json` active_sprint + backlog + blockers | Task status change |
+| `board.html` | `KANBAN.md` + locked template | KANBAN.md regenerated |
+| `HANDOFF.md` | `state.json` current + active_sprint + last_session | Session end |
 
 ### things_not_to_redo
 Critical array for session efficiency. Contains explicit statements like:
 - "Database schema is finalized — do not redesign the user table"
-- "We evaluated Redis vs Memcached and chose Redis (see ADR-002)"
-- "Auth flow spec'd in session 3 — read .project/docs/ux-spec.md section 2"
+- "We chose Redis over Memcached (see ADR-002) — do not reconsider"
 
 Curated at session end. Items removed when they become irrelevant (e.g., after a major pivot).
 
 ### Sync Protocol
-Update `state.json` after: doc creation/update, task completion, decision made, blocker encountered/resolved, roadmap changed, session started/ended, `/ship-go` started/completed, human gate encountered/resolved.
+Update `state.json` after: task status change (both `active_sprint` AND `phases`), sprint/milestone completion, decision detected, blocker added/resolved, backlog item promoted, doc created/updated, session started/ended, `/ship-go` started/completed. Then regenerate affected derived views.
 
 ## 12. Execution Planning & Sprint Chunking
 
-After the roadmap exists, break it into session-sized "sprints." Read `./references/execution-protocol.md` for the full protocol.
+After discovery, break the plan into session-sized "sprints." Read `./references/execution-protocol.md` for the full protocol.
+
+The plan hierarchy lives in `state.json`:
+```
+Phase → Milestone → Sprint → Task
+```
 
 Each sprint defines:
-- **Scope**: Which tasks/subtasks from milestones.md
-- **Dependencies**: What must be done first
+- **Scope**: Which tasks (by ID) from the milestone's task list
+- **Dependencies**: Task IDs that must complete first
 - **Parallelization**: What can run in separate worktrees or subagents simultaneously
-- **Acceptance criteria**: How to know the sprint is done
+- **Acceptance criteria**: Per-task Given/When/Then in `state.json`
 - **Estimated sessions**: How many sessions this sprint should take
 
-The execution plan lives in `.project/roadmap/execution-plan.md`.
+`plan.md` is a **derived human-readable view** of this hierarchy, regenerated from `state.json` when the plan changes. Never edit `plan.md` directly.
 
 **Sprint types**: Feature sprint, refactor sprint, integration sprint, hardening sprint.
 
-**Auto-adjustment**: After each session, update sprint progress. If velocity differs from estimate, re-scope future sprints. If a sprint is done, advance to next. Note parallelization opportunities discovered during the session.
+**Auto-adjustment**: After each session, update sprint progress in `state.json`. If velocity differs from estimate, re-scope future sprints. If a sprint is done, advance `current.sprint_id` and populate new `active_sprint`. Regenerate `plan.md`.
 
-**Roadmap vs Execution Plan**: The roadmap is strategic (milestones, phases, "what and when"). The execution plan is operational (sprints, tasks, "how we actually build it"). When the roadmap changes, the execution plan is automatically re-chunked.
+**Roadmap vs Plan**: Same data, different zoom levels. "Roadmap" = summary (phases + milestones + progress %). "Plan" = detail (sprints + tasks + dependencies). Both derived from `state.json` phases array.
 
 ## 13. Versioning & Archival
 

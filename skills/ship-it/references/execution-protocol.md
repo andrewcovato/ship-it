@@ -87,7 +87,7 @@ Map to T-shirt sizes for quick reference:
 ### Pattern 3: Test-Writing as Parallel Activity
 **When:** Feature implementation is clear and tests can be written independently.
 **How:** One track writes implementation, another writes tests. They converge when implementation is done.
-**Prerequisite:** Acceptance criteria must be defined (from PRD or milestones.md).
+**Prerequisite:** Acceptance criteria must be defined (from PRD or state.json).
 
 ### Pattern 4: Doc-Writing as Parallel Activity
 **When:** A feature is being built and documentation can be drafted from specs.
@@ -119,7 +119,7 @@ Map to T-shirt sizes for quick reference:
 3. Any delay on the critical path delays the entire milestone
 4. Optimize: can any critical-path task be split to allow parallelization?
 
-### Dependency Notation in execution-plan.md
+### Dependency Notation in state.json
 ```
 Sprint 3 — "API Endpoints"
   Dependencies: Sprint 2 (data model) MUST be complete
@@ -172,42 +172,42 @@ Use a rolling average of the last 3 sessions (or all sessions if <3).
 
 ### Re-Chunking Process
 1. Save current execution plan state (for reference)
-2. List remaining tasks from `milestones.md`
+2. List remaining tasks from `state.json`
 3. Update dependency graph
 4. Re-chunk into sprints using sizing heuristics
-5. Update `execution-plan.md`
+5. Update `state.json`
 6. Update `state.json` with new sprint info
 7. Inform user: "I've re-chunked the execution plan. [Summary of changes]."
 
 ## Sprint Completion Checklist
 
 Before marking a sprint complete:
-- [ ] All sprint tasks marked "done" in `milestones.md`
+- [ ] All sprint tasks marked "done" in `state.json`
 - [ ] Acceptance criteria met for each task
 - [ ] Tests passing
 - [ ] Docs updated for any changed behavior
 - [ ] No new blockers introduced
 - [ ] Tech debt logged if shortcuts were taken
 - [ ] Backlog updated if new work was discovered
-- [ ] `execution-plan.md` updated with actual sessions and notes
+- [ ] `state.json` updated with actual sessions and notes
 
 After marking complete:
 - Advance `active_sprint` in `state.json` to next sprint
-- Update sprint history in `execution-plan.md`
+- Update sprint history in `state.json`
 - Check: does the next sprint's prerequisites hold?
 - Surface: any exploration or backlog items relevant to the next sprint area
 
 ## Integration with Autonomous Execution
 
-When `/ship-go` drives sprint execution, the execution plan provides the task sequence. Each strategic task from `execution-plan.md` is converted into a context packet for decomposition.
+When `/ship-go` drives sprint execution, the execution plan provides the task sequence. Each strategic task from `state.json` is converted into a context packet for decomposition.
 
 ### Task Bridge Format
 
 For superpowers integration, each task becomes a context packet:
 
 ```
-Feature: [task name from milestones.md]
-Goal: [acceptance criteria from milestones.md]
+Feature: [task name from state.json]
+Goal: [acceptance criteria from state.json]
 Architecture: [relevant excerpt from architecture.md]
 Tech stack: [from PROJECT.md]
 

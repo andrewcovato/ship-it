@@ -41,7 +41,7 @@ Blockers: [none | list]
 Update KANBAN.md (data layer) FIRST, then render board.html (presentation layer).
 
 **KANBAN.md** (`.project/KANBAN.md`):
-If it exists, read it as the authority. Compare against `state.json`, `milestones.md`, `execution-plan.md`, `backlog.md`. Apply ONLY changes justified by diffs. Preserve all card text that hasn't changed. If nothing changed, skip.
+Regenerate from `state.json` (`active_sprint.tasks`, `backlog`, `blockers`). KANBAN.md is a derived view — always regenerated from state, never patched.
 If it doesn't exist, create it from the template in `doc-templates.md`.
 
 **board.html** (`.project/mocks/board.html`):
@@ -104,7 +104,7 @@ Execute when any of these triggers occur:
 
 ### Step 1: Enumerate Changes
 Compile a list of everything that happened this session:
-- Tasks completed (with task IDs from milestones.md)
+- Tasks completed (with task IDs from state.json)
 - Documents created or updated (with version numbers)
 - Decisions made (with ADR numbers if applicable)
 - Blockers encountered or resolved
@@ -183,7 +183,7 @@ If any document had a major version change (not just minor edits):
 - Update `backlog_stats` if backlogs changed
 
 ### Step 6: Adjust Execution Plan
-- Update current sprint progress in `execution-plan.md`
+- Update current sprint progress in `state.json`
 - If sprint is complete: advance `active_sprint` to next sprint
 - If velocity differs from estimate: re-scope future sprint estimates
 - Note any parallelization opportunities discovered during the session

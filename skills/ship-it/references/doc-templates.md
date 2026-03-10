@@ -31,9 +31,8 @@ Every document MUST be self-contained and droppable into any coding agent with z
 
 - PRD: `.project/docs/prd.md`
 - Architecture: `.project/docs/architecture.md`
-- Roadmap: `.project/roadmap/roadmap.md`
-- Execution Plan: `.project/roadmap/execution-plan.md`
-- Current Sprint: [sprint name] — see execution plan
+- Plan: `.project/plan.md` (derived from state.json)
+- Current Sprint: [sprint name] — see state.json
 - Kanban Board: `.project/mocks/board.html`
 
 ## Design Principles
@@ -421,148 +420,103 @@ Every document MUST be self-contained and droppable into any coding agent with z
 - [Color contrast requirements]
 ```
 
-## roadmap/roadmap.md — Strategic Roadmap
+## plan.md — Project Plan (Derived View)
+
+**This file is a derived view.** Generated from `state.json` phases hierarchy. Never edited directly. Regenerated when the plan changes (sprint advance, pivot, replan).
+
+Shows the same data at two zoom levels:
+- **Roadmap view** (top section): Phases + milestones + progress %
+- **Detail view** (lower sections): Sprints + tasks + dependencies + acceptance criteria
 
 ```markdown
-# Roadmap — [Project Name]
+# Plan — [Project Name]
 
-**Version:** [N]
-**Last Updated:** [YYYY-MM-DD]
-**Timeline Visualization:** `.project/mocks/mock-NNN-roadmap-timeline.html`
+**Generated from:** state.json v[N]
+**Last Regenerated:** [YYYY-MM-DD]
+**Current:** Phase [P-N] → Milestone [M-NNN] → Sprint [S-NNN]
 
-## Current Phase: [Phase Name]
+---
 
-## Phase Overview
+## Roadmap Overview
 
-| Phase | Name | Goal | Status |
-|-------|------|------|--------|
-| 1 | [Name] | [One-line goal] | [not started/in progress/complete] |
-| 2 | [Name] | [One-line goal] | [not started/in progress/complete] |
-| 3 | [Name] | [One-line goal] | [not started/in progress/complete] |
+| Phase | Name | Status | Milestones | Progress |
+|-------|------|--------|------------|----------|
+| P-1 | [Name] | done | M-001, M-002 | 100% |
+| P-2 | [Name] | active | M-003, M-004 | 60% |
+| P-3 | [Name] | planned | M-005 | 0% |
 
-## Phase Details
+---
 
-### Phase 1: [Name]
+## Phase P-1: [Name] ✓
 
-**Goal:** [What this phase achieves]
-**Duration:** [Estimated]
-**Milestones:** [Reference to milestones.md]
-**Success Criteria:**
-- [Measurable outcome]
-- [Measurable outcome]
+**Status:** done
 
-**Key Deliverables:**
-- [Deliverable]
+### Milestone M-001: [Name] ✓
+**Progress:** 5/5 tasks
+**Sprints:** S-001, S-002
 
-**Dependencies:**
-- [What must be true before this phase can start]
+| ID | Task | Size | Status | Sprint | Dependencies |
+|----|------|------|--------|--------|-------------|
+| T-001 | [Task name] | M | done | S-001 | — |
+| T-002 | [Task name] | L | done | S-001 | T-001 |
+| T-003 | [Task name] | S | done | S-002 | — |
 
-**Risks:**
-- [Risk] — Mitigation: [strategy]
+---
 
-[Repeat for each phase]
+## Phase P-2: [Name] ← ACTIVE
 
-## Deferred Items
+### Milestone M-003: [Name] ← ACTIVE
+**Progress:** 3/8 tasks
+**Sprints:** S-005 (active), S-006, S-007
 
-| Item | Reason Deferred | Earliest Reconsideration |
-|------|----------------|------------------------|
-| [Feature] | [Why not now] | [Phase/milestone] |
+#### Sprint S-005: [Name] ← ACTIVE
+**Type:** feature
+**Estimated Sessions:** 2
+**Actual Sessions:** 1
 
-## Revision History
-| Version | Date | Changes | Trigger |
-|---------|------|---------|---------|
-| 1 | [date] | Initial roadmap | Discovery complete |
-```
+| ID | Task | Size | Status | Dependencies | Acceptance Criteria |
+|----|------|------|--------|-------------|-------------------|
+| T-020 | [Task name] | M | done | — | Given X, When Y, Then Z |
+| T-021 | [Task name] | L | doing | T-020 | Given X, When Y, Then Z |
+| T-022 | [Task name] | M | pending | — | Given X, When Y, Then Z |
 
-## roadmap/milestones.md — Milestone Definitions
+#### Sprint S-006: [Name]
+**Type:** integration
+**Estimated Sessions:** 1
 
-```markdown
-# Milestones — [Project Name]
+| ID | Task | Size | Status | Dependencies |
+|----|------|------|--------|-------------|
+| T-025 | [Task name] | S | pending | T-021 |
 
-**Last Updated:** [YYYY-MM-DD]
+[Continue for all phases/milestones/sprints]
 
-## Milestone: [M1 — Name]
+---
 
-**Phase:** [Phase number]
-**Status:** [not started | in progress | complete]
-**Progress:** [X/Y tasks]
+## Backlog
 
-### Tasks
+### Main
+| ID | Item | Description |
+|----|------|-------------|
+| BL-001 | [Name] | [Brief description] |
 
-| ID | Task | Size | Status | Sprint | Dependencies | Acceptance Criteria |
-|----|------|------|--------|--------|-------------|-------------------|
-| T-001 | [Task name] | S/M/L/XL | [todo/doing/done/blocked] | [sprint name] | [T-NNN or none] | [Given/When/Then or brief] |
+### Exploration
+| ID | Item | Source Session |
+|----|------|--------------|
+| BL-003 | [Name] | Session 4 |
 
-### Subtasks (expanded)
+### Tech Debt
+| ID | Item | Description |
+|----|------|-------------|
+| BL-005 | [Name] | [Brief description] |
 
-**T-001: [Task name]**
-- [ ] [Subtask 1] — [brief description]
-- [ ] [Subtask 2] — [brief description]
-- [ ] [Subtask 3] — [brief description]
-
-**Acceptance Criteria:**
-- Given [precondition], When [action], Then [expected result]
-
-[Repeat task blocks]
-
-## Milestone: [M2 — Name]
-[Same structure]
-```
-
-## roadmap/execution-plan.md — Execution Plan
-
-```markdown
-# Execution Plan — [Project Name]
-
-**Last Updated:** [YYYY-MM-DD]
-**Current Sprint:** [Sprint name]
-**Sprint Timeline:** `.project/mocks/mock-NNN-sprint-timeline.html`
-
-## Velocity Notes
-- Average tasks per session: [N]
-- Sessions per sprint (actual): [N]
-- Adjustment notes: [Any re-scoping history]
-
-## Active Sprint: [Sprint N — Name]
-
-**Type:** [feature | refactor | integration | hardening]
-**Scope:** [Brief description of what this sprint delivers]
-**Estimated Sessions:** [N]
-**Actual Sessions So Far:** [N]
-**Status:** [in progress | complete | re-scoping]
-
-### Tasks This Sprint
-| Task | From Milestone | Size | Status | Parallelizable | Notes |
-|------|---------------|------|--------|----------------|-------|
-| [Task] | [M-N] | [S/M/L] | [todo/doing/done] | [yes/no] | [context] |
-
-### Parallelization Opportunities
-- [Task A] and [Task B] can run in separate worktrees simultaneously
-- [Frontend work] and [Backend work] are independent tracks
-
-### Acceptance Criteria
-- [ ] [Criteria for sprint completion]
-
-### Dependencies
-- Blocked by: [nothing | specific items]
-- Blocks: [what can't start until this is done]
-
-## Upcoming Sprints
-
-### Sprint [N+1] — [Name]
-**Type:** [type]
-**Scope:** [description]
-**Estimated Sessions:** [N]
-**Prerequisites:** Sprint [N] complete
-**Tasks:** [task list from milestones.md]
-
-[Repeat for planned sprints]
+---
 
 ## Sprint History
 
-| Sprint | Name | Planned Sessions | Actual Sessions | Tasks Completed | Notes |
-|--------|------|-----------------|----------------|----------------|-------|
-| 1 | [Name] | [N] | [N] | [X/Y] | [Any notes] |
+| Sprint | Name | Type | Planned Sessions | Actual Sessions | Tasks | Notes |
+|--------|------|------|-----------------|----------------|-------|-------|
+| S-001 | [Name] | feature | 2 | 2 | 3/3 | — |
+| S-002 | [Name] | refactor | 1 | 1 | 2/2 | — |
 ```
 
 ## decisions/adr-NNN-title.md — Architecture Decision Record
@@ -658,41 +612,41 @@ This document is REGENERATED (complete rewrite) at the end of every session. NEV
 | [path] | [created/updated/archived] |
 ```
 
-## KANBAN.md
+## KANBAN.md (Derived View)
 
-The kanban data file. Lives at `.project/KANBAN.md`. This is the **single source of truth** for all board card data. The HTML board (`board.html`) is rendered from this file.
+The kanban data file. Lives at `.project/KANBAN.md`. **Derived from `state.json`** — regenerated whenever task statuses change. The HTML board (`board.html`) is rendered from this file.
 
-Cards are listed under column headers. Each card is a single line with a fixed format. Card text MUST match task names from `milestones.md` or `backlog.md` exactly — do not paraphrase or re-interpret.
+Cards are listed under column headers. Each card is a single line with a fixed format. Card text MUST match task names from `state.json` exactly — do not paraphrase.
 
-When updating the kanban, update KANBAN.md FIRST, then render the HTML from it.
+KANBAN.md is regenerated from `state.json`, then board.html is rendered from KANBAN.md. Never edit KANBAN.md directly.
 
 ```markdown
 # Kanban
 
-**Sprint:** [Sprint N — Sprint Name]
-**Milestone:** [M-name]
-**Phase:** [phase]
+**Sprint:** [S-NNN — Sprint Name]
+**Milestone:** [M-NNN — Milestone Name]
+**Phase:** [P-N — Phase Name]
 **Session:** [N]
 
 ## Backlog
-- [ ] [Task name from backlog.md] | [S/M/L/XL]
+- [ ] [Task name from state.json backlog] | [S/M/L/XL]
 
 ## Up Next
-- [ ] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL]
+- [ ] [Task name from state.json — status: pending, in next sprint] | Sprint [N] | [S/M/L/XL]
 
 ## In Progress
-- [~] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL]
+- [~] [Task name from state.json — status: doing] | Sprint [N] | [S/M/L/XL]
 
 ## Done
-- [x] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL]
+- [x] [Task name from state.json — status: done] | Sprint [N] | [S/M/L/XL]
 
 ## Blocked
-- [!] [Task name from milestones.md] | Sprint [N] | [S/M/L/XL] | Blocker: [B-NNN description]
+- [!] [Task name from state.json — status: blocked] | Sprint [N] | [S/M/L/XL] | Blocker: [B-NNN description]
 ```
 
 ### Card line format
 ```
-- [status] Task name exactly as in source | Sprint N | Size | optional blocker
+- [status] Task name exactly as in state.json | Sprint N | Size | optional blocker
 ```
 
 Status markers:
@@ -702,9 +656,8 @@ Status markers:
 - `[!]` — blocked
 
 ### Rules
-- Card text MUST be copied verbatim from `milestones.md` or `backlog.md` — never paraphrase
-- Cards move between sections by changing their status marker and section
-- When a card moves, its text MUST remain identical
+- Card text MUST match task names from `state.json` exactly — never paraphrase
+- KANBAN.md is regenerated from `state.json` on every task status change
+- `state.json` is the authority — KANBAN.md and board.html are always derived
 - Backlog cards have no sprint assignment
-- The header metadata (Sprint, Milestone, Phase, Session) is updated each session
-- KANBAN.md is the authority — if KANBAN.md and board.html disagree, KANBAN.md wins
+- The header metadata (Sprint, Milestone, Phase, Session) comes from `state.json` `current`

@@ -1,6 +1,8 @@
 # Backlog Protocol — Three-Tier Backlog Management
 
-The ship-it skill manages three distinct backlogs, each serving a different purpose. Together they capture all known work that isn't in the active sprint.
+> **Note:** Backlog data lives in `state.json` `backlog` array with a `tier` field (main, exploration, tech-debt). The separate backlog files (`backlog/exploration.md`, `backlog/tech-debt.md`, `backlog/backlog.md`) are no longer used. The tiers and promotion rules below still apply — they now operate on `state.json` backlog entries.
+
+The ship-it skill manages three distinct backlog tiers, each serving a different purpose. Together they capture all known work that isn't in the active sprint.
 
 ## Backlog Types
 
@@ -103,13 +105,12 @@ Surface backlog items when the context is right:
 1. Assess severity and impact
 2. Bundle related tech debt items into a "hardening sprint" OR
 3. Attach individual items to feature sprints when the affected code is being touched
-4. Move from `tech-debt.md` to the sprint in `execution-plan.md`
+4. Promote to task in `state.json`: assign task ID, sprint ID, add to milestone tasks array, remove from backlog
 
 ### Main Backlog → Sprint
 1. Prioritize against current sprint candidates
 2. Check dependencies (can it be done now?)
-3. Assign to a sprint in `execution-plan.md`
-4. Update `milestones.md` if this adds a new task to a milestone
+3. Promote to task in `state.json`: assign task ID, sprint ID, add to milestone tasks array, set `promoted_to` in backlog entry
 
 ## Backlog Hygiene
 

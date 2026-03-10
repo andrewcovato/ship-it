@@ -7,7 +7,7 @@ Human gates are points during autonomous execution (`/ship-go`) where the system
 ### 1. Architecture Decision
 **Trigger:** Task requires choosing between approaches, involves trade-offs with no clear winner, or acceptance criteria say "decide on..."
 **Detection keywords:** "choose", "decide", "which approach", "alternative", "trade-off", "evaluate options", "TBD"
-**Action:** Pause execution. Auto-invoke `/ship-decide` flow. Present options with trade-offs. Capture decision as ADR.
+**Action:** Pause execution. Present options with trade-offs. Capture decision as ADR on resolution.
 **Resume:** User makes decision. ADR is written. Execution resumes with the chosen approach.
 
 ### 2. Deployment
@@ -38,20 +38,20 @@ Human gates are points during autonomous execution (`/ship-go`) where the system
 **Trigger:** Task has missing acceptance criteria, conflicting requirements, or is marked [TBD].
 **Detection keywords:** "[TBD]", "unclear", missing acceptance criteria, contradictory requirements
 **Action:** Pause execution. Ask specific clarifying questions. Show downstream impact of the ambiguity.
-**Resume:** User clarifies. Update milestones.md with clarified acceptance criteria. Execution resumes.
+**Resume:** User clarifies. Update task acceptance criteria in state.json. Execution resumes.
 
 ## Detection Protocol
 
 Before executing each task, scan in this order:
 
 ```
-1. Read task description from milestones.md
-2. Read acceptance criteria
-3. Read relevant section of execution-plan.md (notes, dependencies)
+1. Read task from state.json active_sprint.tasks[]
+2. Read acceptance criteria from task.acceptance_criteria
+3. Read task dependencies from task.dependencies
 4. Scan for gate trigger keywords (case-insensitive)
 5. Check for structural signals:
    - Acceptance criteria is empty or contains [TBD] → Scope Ambiguity
-   - Task is in the "deployment" section of milestones → Deployment
+   - Task name/description references deployment → Deployment
    - Task references external services not yet configured → External Dependency
 6. If gate detected:
    - Log gate to state.json human_gates_log
@@ -117,9 +117,9 @@ When the user responds to a gate:
    - session: [current session number]
 
 2. If the resolution changes requirements:
-   - Update milestones.md acceptance criteria
-   - Update execution-plan.md if sprint scope changed
-   - If ADR was created, update recent_decisions in state.json
+   - Update task acceptance criteria in state.json (active_sprint + phases hierarchy)
+   - If ADR was created, add to state.json decisions array
+   - Regenerate plan.md if sprint scope changed
 
 3. Resume execution from the paused task
 ```
