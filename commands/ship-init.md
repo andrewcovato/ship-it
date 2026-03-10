@@ -12,17 +12,16 @@ Detect the environment and choose the right mode:
 
 3. **`.project/` exists but incomplete** → Repair mode. Audit the expected structure:
    ```
-   .project/PROJECT.md, state.json, KANBAN.md
+   .project/PROJECT.md, state.json, plan.md, KANBAN.md
    .project/docs/ (prd, technical-spec, architecture)
-   .project/roadmap/ (roadmap, milestones, execution-plan)
-   .project/backlog/ (backlog, exploration, tech-debt)
+   .project/decisions/
    .project/sessions/HANDOFF.md
    ```
    Report: "Found .project/ with N/M expected files. Generating missing: [list]"
    For each missing file:
    - Docs (prd, tech-spec, architecture): run discovery questions for that doc only, then generate
    - Infrastructure (state.json, KANBAN.md): generate from existing docs
-   - Roadmap/execution-plan: generate from existing docs + ask prioritization questions
+   - Plan hierarchy: build phases/milestones/sprints/tasks in state.json, generate plan.md as derived view
    Never overwrite existing files.
 
 4. **`.project/` exists and complete** → Warn: "Project already initialized. Use `/ship-go` to execute or just ask me questions." Do not re-initialize.
