@@ -1,11 +1,11 @@
 # Adopt Protocol — "New CTO Joins Mid-Flight"
 
-This protocol guides the `/ship-adopt` flow for adopting an existing, in-progress project into the ship-it management framework. Think of it as a new CTO/CPO joining a startup that already has code, maybe some docs, and definitely tribal knowledge that needs capturing.
+This protocol guides the adopt flow (triggered by `/ship-init` on an existing codebase without `.project/`). Think of it as a new CTO/CPO joining a startup that already has code, maybe some docs, and definitely tribal knowledge that needs capturing.
 
 ## Guiding Principles
 
 - **Archive first, reorganize second** — `.original_materials/` is the safety net. Nothing is lost.
-- **Single source of truth** — After adoption, `.project/` is the ONLY place for PM artifacts.
+- **Single source of truth** — After adoption, `state.json` is the authority for all project state. Everything else is a derived view.
 - **Reorganize, don't rewrite intent** — Preserve existing decisions and context; reformat into standard templates.
 - **Source code is never touched** — Only docs, plans, notes, and PM artifacts are reorganized. Source code, tests, configs, and build files stay exactly where they are.
 - **Reality over assumptions** — Build state from what exists, not what was planned.
@@ -13,12 +13,10 @@ This protocol guides the `/ship-adopt` flow for adopting an existing, in-progres
 ## Phase 1: Codebase Audit (Automated)
 
 ### Step 1.1: Create `.project/` Directory Structure
-Create the full directory tree (same as `/ship-init`):
+Create the full directory tree:
 ```
 .project/
   docs/
-  roadmap/
-  backlog/
   decisions/
   sessions/
   archive/
@@ -239,9 +237,7 @@ For each doc in the MECE suite, classify:
 | api-spec.md | | | |
 | data-model.md | | | |
 | ux-spec.md | | | |
-| roadmap.md | | | |
-| milestones.md | | | |
-| execution-plan.md | | | |
+| state.json (plan hierarchy) | | | |
 
 ### Classification Definitions
 
@@ -295,25 +291,30 @@ After content is safely in `.project/` AND archived in `.original_materials/`:
 5. Update README.md if it referenced moved docs (fix links to point to `.project/`)
 
 ### Step 5.4: Build state.json
+Build state.json as the single source of truth. Read `./state-schema.md` for the full schema.
+
 Infer state from reality:
-- **current_phase:** Has deployable code? → "building". Just specs? → "planning". Pre-code? → "discovery". Shipping to users? → "shipping".
-- **active_milestone:** Ask user, or infer from recent commit themes
-- **active_sprint:** Set to first sprint of current milestone
+- **current phase:** Has deployable code? → "building". Just specs? → "planning". Pre-code? → "discovery". Shipping to users? → "shipping".
+- **active milestone:** Ask user, or infer from recent commit themes
+- **active sprint:** Set to first sprint of current milestone
+- **phases array:** Build the full plan hierarchy (Phase → Milestone → Sprint → Task) from interview findings, existing plans, and audit results. Assign deterministic IDs: P-1, M-001, S-001, T-001, etc.
+- **backlog array:** Seed from interview findings (see Step 5.5)
 - **blockers:** From interview findings
 - **things_not_to_redo:** CRITICAL — capture ALL existing decisions that shouldn't be re-litigated
+- **decisions:** Seed with any ADRs or documented decisions found during audit
+- **counters:** Set to match the highest assigned IDs
 
 ### Step 5.5: Seed Backlogs
-- `exploration.md`: Features mentioned in interviews but not in code
-- `tech-debt.md`: Issues identified during audit (missing tests, outdated deps, fragile code, code smells)
-- `backlog.md`: Known pending work from interview
+Add entries to `state.json` `backlog` array:
+- **Exploration tier:** Features mentioned in interviews but not in code
+- **Tech-debt tier:** Issues identified during audit (missing tests, outdated deps, fragile code, code smells)
+- **Main tier:** Known pending work from interview, spec'd with acceptance criteria
 
-### Step 5.6: Generate Execution Plan
-Build sprint sequence from remaining work:
-1. Identify what's in progress (partially built features)
-2. Identify what's next (user priorities from interview)
-3. Account for tech debt (may need a hardening sprint)
-4. Chunk into session-sized sprints (see `execution-protocol.md`)
-5. Write to `.project/roadmap/execution-plan.md`
+### Step 5.6: Generate Derived Views
+From the completed `state.json`:
+1. Generate `plan.md` — human-readable view of the phases hierarchy (see `doc-templates.md` for template)
+2. Generate `KANBAN.md` — board data from active sprint tasks + backlog + blockers
+3. Render `board.html` — from KANBAN.md using the locked kanban template
 
 ### Step 5.7: Generate Architecture Diagram
 Use visual-explainer to generate an architecture diagram from the ACTUAL codebase:
@@ -343,9 +344,9 @@ Update the project's CLAUDE.md:
 - [doc]: generated fresh (marked as draft)
 
 ### Project Health
-- ✅ Healthy: [areas that are in good shape]
-- ⚠️ Needs Attention: [areas flagged for review]
-- 🔴 Critical: [urgent issues]
+- Healthy: [areas that are in good shape]
+- Needs Attention: [areas flagged for review]
+- Critical: [urgent issues]
 
 ### Recommended Priorities
 1. [Top priority based on all findings]
@@ -355,10 +356,10 @@ Update the project's CLAUDE.md:
 
 ### Step 6.2: Iterate on Corrections
 "Does this match your understanding? Anything I got wrong?"
-Incorporate corrections into the docs.
+Incorporate corrections into the docs and `state.json`.
 
 ### Step 6.3: Generate Kanban Board
-Generate `.project/mocks/board.html` with current state. Open in browser.
+Render `.project/mocks/board.html` from KANBAN.md. Open in browser.
 
 ### Step 6.4: Run Session Wrap-Up
 Follow the standard session end protocol from `session-protocol.md`.

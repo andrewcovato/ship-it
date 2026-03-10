@@ -4,7 +4,7 @@ Detailed protocols for managing session lifecycle. These ensure no context is lo
 
 ## Session Start Protocol
 
-Execute these steps in order when a session begins (auto-resume or `/ship-status`):
+Execute these steps in order when a session begins (auto-resume via SessionStart hook):
 
 ### Step 1: Load State
 ```
