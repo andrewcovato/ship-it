@@ -196,3 +196,49 @@ After marking complete:
 - Update sprint history in `execution-plan.md`
 - Check: does the next sprint's prerequisites hold?
 - Surface: any exploration or backlog items relevant to the next sprint area
+
+## Integration with Autonomous Execution
+
+When `/ship-go` drives sprint execution, the execution plan provides the task sequence. Each strategic task from `execution-plan.md` is converted into a context packet for decomposition.
+
+### Task Bridge Format
+
+For superpowers integration, each task becomes a context packet:
+
+```
+Feature: [task name from milestones.md]
+Goal: [acceptance criteria from milestones.md]
+Architecture: [relevant excerpt from architecture.md]
+Tech stack: [from PROJECT.md]
+
+Context:
+- [relevant ADRs from decisions/]
+- [constraints from state.json things_not_to_redo]
+- [outputs from prior tasks in this sprint]
+```
+
+This context packet is passed to `superpowers:writing-plans` for decomposition into atomic 2-5 minute steps.
+
+### Task Readiness Checklist
+
+Before a task can be autonomously executed, verify:
+- [ ] Acceptance criteria are defined (not [TBD])
+- [ ] Hard dependencies are complete
+- [ ] No unresolved blockers on this task
+- [ ] Required external services/credentials are available
+- [ ] Task does not require human gate resolution (or gate is pre-approved)
+
+Tasks failing this checklist are flagged for human input before execution begins.
+
+### Execution Mode Selection
+
+When superpowers is available, choose the execution skill per task:
+
+| Task Attributes | Execution Skill | Rationale |
+|---|---|---|
+| Size S/M, low risk, well-defined | `subagent-driven-development` | Fast, fully autonomous |
+| Size L/XL, cross-cutting, high risk | `executing-plans` | Batch checkpoints, more visibility |
+| Security-sensitive (after gate approval) | `executing-plans` | Human should see progress |
+| First task in a new area of codebase | `executing-plans` | Validate approach before going fast |
+
+User can override via `superpowers_execution_mode` in state.json.

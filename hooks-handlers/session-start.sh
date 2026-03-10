@@ -8,7 +8,7 @@ if [ -d ".project" ]; then
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "A .project/ directory exists in the current working directory. This is a ship-it managed project. Load the ship-it skill and read .project/sessions/HANDOFF.md + .project/state.json to resume the project session. Present a brief status summary before proceeding."
+    "additionalContext": "A .project/ directory exists in the current working directory. This is a ship-it managed project. Load the ship-it skill and read .project/sessions/HANDOFF.md + .project/state.json to resume the project session. Present a brief status summary. Suggest /ship-go to execute the current sprint autonomously."
   }
 }
 EOF

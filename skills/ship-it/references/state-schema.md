@@ -74,7 +74,31 @@ Machine-readable project state. Updated after every significant action. This is 
     "Auth flow spec'd in session 3 — read .project/docs/ux-spec.md section 2"
   ],
   "mock_counter": 1,
-  "adr_counter": 0
+  "adr_counter": 0,
+  "execution_mode": "manual | autonomous | autonomous-superpowers",
+  "superpowers_prompted": false,
+  "superpowers_execution_mode": "auto | executing-plans | subagent-driven-development",
+  "current_go_session": {
+    "started_at": "ISO timestamp or null",
+    "sprint_number": 1,
+    "tasks_attempted": 0,
+    "tasks_completed": 0,
+    "tasks_failed": 0,
+    "tasks_skipped": 0,
+    "skip_gates": [],
+    "superpowers_available": false
+  },
+  "human_gates_log": [
+    {
+      "id": "gate-001",
+      "type": "architecture-decision | deployment | human-testing | external-dependency | security-sensitive | scope-ambiguity",
+      "task": "T-003",
+      "description": "What triggered the gate",
+      "status": "pending | resolved | skipped",
+      "resolution": "Summary of resolution or null",
+      "session": 1
+    }
+  ]
 }
 ```
 
@@ -97,6 +121,11 @@ Machine-readable project state. Updated after every significant action. This is 
 | `things_not_to_redo` | array | Session end (curated) | Prevents re-litigation of settled decisions |
 | `mock_counter` | int | Mock generated | Sequential numbering for mock files |
 | `adr_counter` | int | ADR created | Next ADR number |
+| `execution_mode` | enum | `/ship-go` first run | How autonomous execution operates |
+| `superpowers_prompted` | bool | `/ship-go` first run | Whether user was asked to install superpowers (ask once) |
+| `superpowers_execution_mode` | enum | User preference | Which superpowers execution skill to use |
+| `current_go_session` | object | `/ship-go` start/end | Tracks in-progress autonomous execution state |
+| `human_gates_log` | array | Gate encountered | Audit trail of all human gates |
 
 ## Sync Protocol
 
@@ -110,6 +139,10 @@ Update `state.json` immediately after:
 - Session started (increment `session_count`)
 - Session ended (update `last_session`, curate `things_not_to_redo`)
 - Sprint completed (advance `active_sprint`, update history)
+- `/ship-go` started (set `current_go_session`, set `execution_mode`)
+- `/ship-go` completed (clear `current_go_session.started_at`)
+- Human gate encountered (append to `human_gates_log`)
+- Human gate resolved (update gate status in `human_gates_log`)
 
 ## Phase Transitions
 

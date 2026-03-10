@@ -10,11 +10,13 @@ description: >
   discusses scope, asks "what should we build", mentions MVP planning, or wants
   to break down a feature into tasks. Even casual mentions of "the project",
   "the plan", "what's next", or "where were we" should trigger this skill when
-  a .project/ directory is present. Use /ship-init for new projects,
-  /ship-adopt for existing in-progress projects, /ship-status to resume.
+  a .project/ directory is present.
+  Commands: /ship-init (new or adopt project), /ship-go (autonomous execution),
+  /ship-decide (capture decisions). All other operations (status, wrap, backlog,
+  board, roadmap, plan) happen automatically or via natural language.
 metadata:
   author: andrewcovato
-  version: "0.1.0"
+  version: "0.2.0"
 ---
 
 # Ship It — Project Management Skill
@@ -50,12 +52,13 @@ Check if `.project/` directory exists in the working directory.
 ### Entry Points
 | Entry | When | Action |
 |-------|------|--------|
-| `/ship-init` | New greenfield project | Full discovery + doc generation |
-| `/ship-adopt` | Existing in-progress project | Audit + archive + reorganize + doc generation |
-| Auto-resume | `.project/` detected, returning session | Read state + HANDOFF, present status, generate kanban board |
-| `/ship-status` | Quick check or explicit resume | Same as auto-resume but manually triggered |
+| `/ship-init` | New project, existing project, or incomplete `.project/` | Auto-detects greenfield vs adopt vs repair mode |
+| `/ship-go` | Ready to execute | Autonomous sprint execution with human gates |
+| `/ship-decide` | Explicit decision capture | ADR creation (also auto-invoked by `/ship-go` at decision gates) |
+| Auto-resume | `.project/` detected on session start | Read state + HANDOFF, present status, generate kanban board |
 
 ### Session Start Protocol
+Read `./references/session-protocol.md` for full details.
 1. Read `.project/state.json` — extract phase, active milestone, sprint, blockers
 2. Read `.project/sessions/HANDOFF.md` — extract last session context
 3. Present concise status with metrics: session number, phase, milestone progress, current sprint, priorities
@@ -69,18 +72,30 @@ When context grows large (many files read, long conversation), proactively offer
 - If yes: save partial session notes, update `state.json`, continue
 - If approaching ~80% estimated capacity: "I recommend wrapping up so nothing gets lost."
 
-### Session End Protocol
+### Session End Protocol (auto-triggered)
+Triggered by: sprint completion during `/ship-go`, context limit (~80%), or user request.
+Read `./references/session-protocol.md` for full details.
 1. Enumerate all changes: tasks completed, docs created/updated, decisions made, blockers
 2. Generate session notes: `.project/sessions/<slug>-sprint-<N>-session-<NN>.md`
 3. REGENERATE `.project/sessions/HANDOFF.md` (complete rewrite, NEVER append)
 4. Archive any docs whose versions changed
 5. Update `state.json` with current progress
 6. Adjust execution plan based on session velocity
-7. Print next sprint name and resume command
+7. Update KANBAN.md, render board.html
+8. Print next sprint name and resume command
 
-## 3. First Session: Project Discovery
+### Natural Language Handling
+When a `.project/` is active, respond to natural requests without dedicated commands:
+- "Show me the plan" / "what's in the next sprint" → read and present execution-plan.md
+- "Show the roadmap" / "update the roadmap" → read/update roadmap.md
+- "Show the board" → update KANBAN.md and render board.html
+- "Add X to the backlog" → add to appropriate backlog tier
+- "What's the status?" → present status with metrics
+- "Wrap up" / "end session" → run session end protocol
 
-When `/ship-init` is invoked, drive a CTO/CPO-led discovery conversation.
+## 3. First Session: Project Discovery (Greenfield Mode)
+
+When `/ship-init` is invoked and no source code exists, drive a CTO/CPO-led discovery conversation.
 
 Ask 2-3 questions at a time. Accept brain dumps, bullet points, shorthand. Reflect back understanding before moving on. Read `./references/discovery-protocol.md` for the full question bank.
 
@@ -109,9 +124,9 @@ After discovery, generate docs in this order:
 
 Read `./references/doc-templates.md` for templates of each document.
 
-## 4. Adopting an Existing Project
+## 4. Adopting an Existing Project (Adopt Mode)
 
-When `/ship-adopt` is invoked, follow the "new CTO joins mid-flight" playbook.
+When `/ship-init` is invoked and source code exists but no `.project/`, follow the "new CTO joins mid-flight" playbook.
 
 Read `./references/adopt-protocol.md` for the full protocol. The flow has 6 phases:
 
@@ -129,7 +144,7 @@ Read `./references/adopt-protocol.md` for the full protocol. The flow has 6 phas
 
 ## 5. Returning Session: Resume Flow
 
-When `.project/` is detected or `/ship-status` is invoked:
+Triggered automatically by the SessionStart hook when `.project/` is detected:
 
 1. Read `state.json` + `HANDOFF.md`
 2. Present status with metrics: "Session N+1. Phase: [X]. Milestone [M]: [X/Y] tasks. Current sprint: [name] — [X/Y] done. Last session: [summary]. Priorities: [list]."
@@ -140,8 +155,64 @@ When `.project/` is detected or `/ship-status` is invoked:
    - Roadmap drift (behind timeline)?
    - Execution plan adjustments needed?
 5. Increment `session_count`, begin working session
+6. Suggest: "Run `/ship-go` to execute the current sprint autonomously."
 
-## 6. Document Generation & Auto-Maintenance
+## 6. Autonomous Execution (`/ship-go`)
+
+When `/ship-go` is invoked, execute the current sprint autonomously. Read `./references/autonomous-execution.md` for the full protocol.
+
+### Superpowers Integration
+Ship-it integrates with the **superpowers** plugin (optional) for execution. If installed, superpowers provides:
+- **Task decomposition**: `superpowers:writing-plans` breaks strategic tasks into atomic 2-5 minute steps
+- **TDD execution**: `superpowers:executing-plans` runs steps with RED-GREEN-REFACTOR cycle
+- **Subagent dispatch**: `superpowers:subagent-driven-development` dispatches fresh agents per task
+- **Code review**: Two-stage review (spec compliance + code quality)
+
+If superpowers is not installed, ship-it falls back to direct execution (implement tasks inline with basic test-first pattern).
+
+### Execution Loop
+1. Read current sprint from `execution-plan.md`
+2. For each task: check gates → build context packet → decompose → execute → update state
+3. After each batch (3-5 tasks): present status checkpoint
+4. Sprint complete: auto-wrap (session notes, HANDOFF.md, state.json, kanban)
+5. Advance to next sprint or stop
+
+### Task Context Packet
+For each task, assemble from project docs:
+- Task name + acceptance criteria (from `milestones.md`)
+- Architecture context (from `architecture.md`)
+- Tech stack (from `PROJECT.md`)
+- Relevant ADRs (from `decisions/`)
+- Constraints (from `state.json` `things_not_to_redo`)
+
+### Scope Override
+- `/ship-go` — execute current sprint (default)
+- `/ship-go task T-003` — single task only
+- `/ship-go sprint 4` — jump to sprint 4
+- `/ship-go full-auto` — skip non-critical human gates
+- `/ship-go dry-run` — show plans without executing
+
+## 7. Human Gates
+
+During autonomous execution, certain tasks require human input before proceeding. Read `./references/human-gates.md` for the full protocol.
+
+### Gate Types
+| Type | Trigger | Action |
+|------|---------|--------|
+| Architecture Decision | Task requires choosing between approaches | Auto-invoke `/ship-decide`, capture ADR |
+| Deployment | Task involves deploy/release/production | Pause, show deploy instructions |
+| Human Testing | Acceptance criteria require visual/UX verification | Pause, provide test checklist |
+| External Dependency | Task needs API keys, credentials, external access | Pause, explain; continue other tasks |
+| Security Sensitive | Task involves auth, encryption, secrets | Pause, present approach for review |
+| Scope Ambiguity | Missing/conflicting acceptance criteria | Pause, ask clarifying question |
+
+### Detection
+Before each task, scan description and acceptance criteria for gate trigger keywords. If detected, pause and present the gate with context, impact, and options. Architecture Decision gates are never skippable.
+
+### Pre-approval
+Users can skip gate types: `/ship-go full-auto` skips all except architecture decisions. Skipped gates are logged for audit.
+
+## 8. Document Generation & Auto-Maintenance
 
 ### MECE Documentation Suite
 Each doc has strict ownership boundaries. Read `./references/doc-templates.md` for templates.
@@ -172,7 +243,7 @@ Always inform the user: "I've updated [doc] to reflect [change]."
 ### ADR Generation
 When a significant design choice is made, create `decisions/adr-NNN-<slugified-title>.md`. Read `./references/doc-templates.md` for the ADR template. ADRs are immutable once written — if superseded, create a new ADR that references the old one.
 
-## 7. Proactive CTO/CPO Behaviors
+## 9. Proactive CTO/CPO Behaviors
 
 Read `./references/proactive-triggers.md` for the full trigger catalog.
 
@@ -193,7 +264,7 @@ Read `./references/proactive-triggers.md` for the full trigger catalog.
 
 Be assertive but not pushy. Mention it once. If the user doesn't engage, move on.
 
-## 8. Visual Integration
+## 10. Visual Integration
 
 Invoke the visual-explainer skill for all visual artifacts. Output to `.project/mocks/`.
 
@@ -241,12 +312,12 @@ Auto-regenerate architecture diagram when `architecture.md` changes significantl
 
 **Mock naming**: `mock-NNN-<descriptive-name>.html` (sequential numbering).
 
-## 9. State Management
+## 11. State Management
 
 ### state.json
 Machine-readable project state. Updated after every significant action. Read `./references/state-schema.md` for the full schema.
 
-Key fields: `project_name`, `project_slug`, `current_phase` (discovery|planning|building|shipping), `session_count`, `last_session`, `active_milestone` (with progress), `active_sprint`, `roadmap_version`, `blockers`, `recent_decisions`, `backlog_stats`, `docs_status`, `things_not_to_redo`.
+Key fields: `project_name`, `project_slug`, `current_phase` (discovery|planning|building|shipping), `session_count`, `last_session`, `active_milestone` (with progress), `active_sprint`, `roadmap_version`, `blockers`, `recent_decisions`, `backlog_stats`, `docs_status`, `things_not_to_redo`, `execution_mode`, `current_go_session`, `human_gates_log`.
 
 ### things_not_to_redo
 Critical array for session efficiency. Contains explicit statements like:
@@ -257,9 +328,9 @@ Critical array for session efficiency. Contains explicit statements like:
 Curated at session end. Items removed when they become irrelevant (e.g., after a major pivot).
 
 ### Sync Protocol
-Update `state.json` after: doc creation/update, task completion, decision made, blocker encountered/resolved, roadmap changed, session started/ended.
+Update `state.json` after: doc creation/update, task completion, decision made, blocker encountered/resolved, roadmap changed, session started/ended, `/ship-go` started/completed, human gate encountered/resolved.
 
-## 10. Execution Planning & Sprint Chunking
+## 12. Execution Planning & Sprint Chunking
 
 After the roadmap exists, break it into session-sized "sprints." Read `./references/execution-protocol.md` for the full protocol.
 
@@ -278,7 +349,7 @@ The execution plan lives in `.project/roadmap/execution-plan.md`.
 
 **Roadmap vs Execution Plan**: The roadmap is strategic (milestones, phases, "what and when"). The execution plan is operational (sprints, tasks, "how we actually build it"). When the roadmap changes, the execution plan is automatically re-chunked.
 
-## 11. Versioning & Archival
+## 13. Versioning & Archival
 
 Archive documents before major changes:
 - **When**: Before roadmap revisions, major PRD changes, architecture pivots, data model migrations
@@ -293,14 +364,14 @@ Archive documents before major changes:
 
 When a pivot is detected: archive ALL affected docs, create an ADR capturing the rationale, update PROJECT.md, regenerate HANDOFF.md, review roadmap timeline.
 
-## 12. CLAUDE.md Integration
+## 14. CLAUDE.md Integration
 
 After project setup or adoption, update the project's CLAUDE.md:
 
 ```markdown
 ## Project Management
 This project uses the ship-it skill. Project state is in `.project/`.
-Run `/ship-status` to resume or check status.
+Run `/ship-go` to execute the current sprint autonomously.
 
 ## Design Principles
 <!-- Generated by ship-it skill. Do not edit manually. -->

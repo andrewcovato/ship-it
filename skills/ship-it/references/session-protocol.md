@@ -96,7 +96,11 @@ These are rough signals, not exact measurements:
 
 ## Session End Protocol
 
-Execute when `/ship-wrap` is invoked or when proactively wrapping up.
+Execute when any of these triggers occur:
+- `/ship-go` completes a sprint (auto-wrap)
+- Context limit reached (~80% capacity)
+- User says "wrap up", "end session", or similar
+- User explicitly asks to stop
 
 ### Step 1: Enumerate Changes
 Compile a list of everything that happened this session:
@@ -192,5 +196,7 @@ Session wrapped. Next sprint: [Sprint N] — "[Sprint Name]"
 
 To resume:
   claude  (SessionStart hook will auto-load context)
-  or: /ship-status
+
+To execute next sprint autonomously:
+  /ship-go
 ```

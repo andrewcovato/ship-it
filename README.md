@@ -1,6 +1,6 @@
 # Ship It
 
-A Claude Code skill that acts as your CTO/CPO co-pilot for multi-session software project management. You bring the vision; it owns the build process.
+A Claude Code plugin that acts as your CTO/CPO co-pilot for multi-session software project management. Co-create a solid PRD and execution plan, then push go for autonomous sprint execution.
 
 ## The Operating Model
 
@@ -8,73 +8,108 @@ A Claude Code skill that acts as your CTO/CPO co-pilot for multi-session softwar
 
 **Claude is the CTO/CPO.** It owns the build process, manages all documentation, proactively challenges decisions, flags downstream implications, and keeps the project moving across sessions.
 
-Claude never waits to be asked. When a conversation reveals a new requirement, the PRD gets updated. When an architecture decision is made, an ADR is created. When scope creeps, Claude flags it. When the timeline slips, Claude reports it with options.
+Claude never waits to be asked. When a conversation reveals a new requirement, the PRD gets updated. When an architecture decision is made, an ADR is created. When scope creeps, Claude flags it.
 
 ## Quick Start
 
-### New Project
+### Start a Project
 
 ```
 /ship-init
 ```
 
-Claude drives a structured discovery conversation (vision, product shape, tech landscape, architecture, sequencing), then generates a complete documentation suite, roadmap, execution plan, and architecture diagram.
+Works for both new and existing projects. Claude auto-detects the environment:
+- **Empty directory** -- Drives a structured discovery conversation, then generates a complete doc suite, roadmap, execution plan, and architecture diagram.
+- **Existing codebase** -- The "new CTO joins mid-flight" flow. Audits the codebase, archives existing PM artifacts, interviews you, runs a gap analysis, reorganizes everything, and builds an execution plan from reality.
+- **Incomplete `.project/`** -- Repair mode. Audits what exists, generates only what's missing without overwriting.
 
-### Existing Project
+### Push Go
 
 ```
-/ship-adopt
+/ship-go
 ```
 
-The "new CTO joins mid-flight" flow. Claude audits the codebase, archives existing PM artifacts as a safety net, interviews you about the current state, runs a gap analysis against the doc suite, reorganizes everything into the standard structure, and builds an execution plan from reality.
+Autonomously executes the current sprint. For each task, Claude:
+1. Checks for human gates (decisions, deploys, testing)
+2. Builds a context packet from your project docs
+3. Decomposes the task into atomic steps (via [superpowers](https://github.com/obra/superpowers) if installed)
+4. Executes with TDD and code review
+5. Updates project state, milestones, and kanban board
+
+You only get pulled in when a human gate is hit.
+
+**Scope options:**
+- `/ship-go` -- execute current sprint
+- `/ship-go task T-003` -- single task only
+- `/ship-go full-auto` -- skip non-critical gates
+- `/ship-go dry-run` -- show plans without executing
+
+### Capture a Decision
+
+```
+/ship-decide "Use JWT for auth instead of sessions"
+```
+
+Creates an Architecture Decision Record and auto-checks implications on backlog, architecture, and execution plan. Also auto-invoked by `/ship-go` when it hits a decision gate.
 
 ### Resuming Work
 
-Just open Claude Code in the project directory. The SessionStart hook detects the `.project/` directory and auto-loads context. You can also run:
+Just open Claude Code in the project directory. The SessionStart hook detects `.project/` and auto-loads context. No command needed.
 
-```
-/ship-status
-```
+### Everything Else
 
-Claude presents your current session number, phase, milestone progress, sprint status, priorities, and generates a kanban board.
-
-### Ending a Session
-
-```
-/ship-wrap
-```
-
-Generates session notes, regenerates the handoff document, updates project state, adjusts the execution plan based on velocity, and tells you what to work on next.
+No commands needed. Just ask naturally:
+- "Show me the plan" / "What's in the next sprint?"
+- "Show the roadmap" / "Update the roadmap"
+- "Show the board"
+- "Add X to the backlog"
+- "Wrap up" / "End session"
 
 ## Commands
 
 | Command | Purpose |
 |---------|---------|
-| `/ship-init` | Initialize a new managed project |
-| `/ship-adopt` | Adopt an existing in-progress project |
-| `/ship-status` | Resume a session or check status |
-| `/ship-plan` | View or update the execution plan (sprints, parallelization) |
-| `/ship-roadmap` | View or update the strategic roadmap (phases, milestones) |
+| `/ship-init` | Start or adopt a project (auto-detects mode) |
+| `/ship-go` | Autonomous sprint execution with human gates |
 | `/ship-decide` | Capture an Architecture Decision Record |
-| `/ship-wrap` | End session with full handoff |
-| `/ship-backlog` | View and manage the three-tier backlog |
-| `/ship-board` | Generate or refresh the project kanban board |
+
+## Superpowers Integration
+
+Ship-it integrates with the [superpowers](https://github.com/obra/superpowers) plugin for execution quality. If installed, `/ship-go` uses:
+- `superpowers:writing-plans` to decompose tasks into atomic 2-5 minute steps
+- `superpowers:executing-plans` or `subagent-driven-development` for TDD execution
+- Two-stage code review (spec compliance + code quality)
+
+If superpowers is not installed, ship-it offers to install it on first `/ship-go`, then falls back to direct execution if declined.
+
+## Human Gates
+
+During autonomous execution, certain tasks pause for human input:
+
+| Gate | When | What Happens |
+|------|------|--------------|
+| Architecture Decision | Task requires choosing between approaches | Auto-invokes `/ship-decide` |
+| Deployment | Task involves deploy/release | Pauses with instructions |
+| Human Testing | Acceptance criteria need visual verification | Pauses with test checklist |
+| External Dependency | Task needs credentials or external access | Pauses; continues other tasks |
+| Security Sensitive | Task involves auth, encryption, secrets | Pauses for approach review |
+| Scope Ambiguity | Missing or conflicting requirements | Pauses with clarifying questions |
+
+Architecture Decision gates are never skippable. Use `/ship-go full-auto` to skip others.
 
 ## What Gets Generated
 
 ### Documentation Suite (MECE)
 
-Every document has strict ownership boundaries and is written to be droppable into any coding agent with zero context.
-
 | Document | Owns |
 |----------|------|
-| `PROJECT.md` | Identity, elevator pitch, tech stack, current phase |
+| `PROJECT.md` | Identity, elevator pitch, tech stack |
 | `prd.md` | What & Why (requirements, acceptance criteria) |
 | `technical-spec.md` | How: implementation (algorithms, libraries) |
-| `architecture.md` | How: structure (components, data flow, deployment) |
+| `architecture.md` | How: structure (components, data flow) |
 | `api-spec.md` | Interface contracts (endpoints, schemas) |
-| `data-model.md` | Schema, entities, relationships, migrations |
-| `ux-spec.md` | User flows, wireframe descriptions, accessibility |
+| `data-model.md` | Schema, entities, relationships |
+| `ux-spec.md` | User flows, wireframe descriptions |
 | `roadmap.md` | Strategic roadmap: phases, milestones |
 | `milestones.md` | Tasks, subtasks, estimates, acceptance criteria |
 | `execution-plan.md` | Session-sized sprints with parallelization |
@@ -85,128 +120,54 @@ Every document has strict ownership boundaries and is written to be droppable in
 .project/
   PROJECT.md
   state.json
+  KANBAN.md
   docs/
-    prd.md
-    technical-spec.md
-    architecture.md
-    api-spec.md
-    data-model.md
-    ux-spec.md
   roadmap/
-    roadmap.md
-    milestones.md
-    execution-plan.md
-  backlog/
-    backlog.md            # Spec'd but unscheduled work
-    exploration.md        # Ideas not yet spec'd
-    tech-debt.md          # Technical shortcuts and fragility
-  decisions/
-    adr-001-<title>.md    # Architecture Decision Records
-  sessions/
-    HANDOFF.md            # Briefing for the next session (regenerated each time)
-    <session-logs>.md     # Per-session logs (immutable)
-  archive/                # Versioned doc snapshots at pivots
-  mocks/                  # Visual outputs (architecture diagrams, kanban board)
+  backlog/          # Three tiers: exploration, tech-debt, main
+  decisions/        # Architecture Decision Records
+  sessions/         # HANDOFF.md + per-session logs
+  archive/          # Versioned doc snapshots
+  mocks/            # Visual outputs (diagrams, kanban board)
 ```
-
-## Key Concepts
-
-### Session Continuity
-
-Session state is preserved through three mechanisms:
-
-1. **`state.json`** -- Machine-readable project state (phase, milestone progress, sprint status, blockers, decisions, backlog counts). Updated after every significant action.
-
-2. **`HANDOFF.md`** -- A complete briefing for the next session. Regenerated from scratch at every session end (never appended, which prevents stale info from accumulating).
-
-3. **SessionStart hook** -- When Claude Code starts in a directory with `.project/`, context is automatically loaded. No manual action needed.
-
-### Execution Planning
-
-The roadmap is strategic (milestones, phases, "what and when"). The execution plan is operational (sprints, tasks, "how we actually build it").
-
-Sprints are session-sized, not time-boxed. Each sprint defines scope, dependencies, parallelization opportunities, acceptance criteria, and an estimated session count. Claude adjusts sprint sizes based on actual velocity.
-
-Four sprint types: feature, refactor, integration, and hardening.
-
-### Three-Tier Backlog
-
-- **Exploration** -- Ideas discussed but not spec'd. "Maybe someday" features.
-- **Tech Debt** -- Shortcuts, fragility, missing tests, outdated dependencies.
-- **Main Backlog** -- Spec'd work with acceptance criteria, ready to schedule.
-
-Claude surfaces backlog items when the context is right (working on related code, completing a sprint, tech debt accumulating).
-
-### Proactive Behaviors
-
-Claude doesn't just track -- it intervenes:
-
-- Flags pivots vs iterations and warns about downstream implications
-- Detects scope creep and recommends re-prioritization
-- Reports timeline pressure with velocity-based projections
-- Surfaces risks (single points of failure, missing fallbacks)
-- Captures decisions as ADRs when it hears "let's go with..."
-- Warns when docs are stale in active development areas
-
-### Visual Integration
-
-Generates HTML visualizations via the visual-explainer skill:
-
-- Architecture diagrams at project init
-- ER diagrams for data models
-- User flow diagrams for UX specs
-- Timeline visualizations for roadmaps
-- Kanban board at every session start
 
 ## Installation
 
-### From GitHub (recommended)
-
 ```bash
-claude /plugin install ship-it@andrewcovato
+claude plugin install andrewcovato/ship-it
 ```
 
-Or install directly from the repo:
+### Recommended
+
+Also install [superpowers](https://github.com/obra/superpowers) for TDD, code review, and subagent execution:
 
 ```bash
-claude /plugin install andrewcovato/ship-it
+claude plugin install obra/superpowers
 ```
-
-### Prerequisites
-
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI installed
-- The [visual-explainer](https://github.com/anthropics/claude-code) skill (recommended -- used for architecture diagrams, kanban board, and other visuals)
 
 ### Plugin Structure
 
 ```
 ship-it/
-├── .claude-plugin/
-│   └── plugin.json              # Plugin metadata
-├── skills/
-│   └── ship-it/
-│       ├── SKILL.md             # Core skill definition
-│       └── references/          # 8 reference docs (protocols, templates, schemas)
-├── commands/
-│   └── ship-*.md                # 9 slash commands
-├── hooks/
-│   └── hooks.json               # SessionStart hook registry
-├── hooks-handlers/
-│   └── session-start.sh         # Auto-detects .project/ directories
-├── README.md
-└── LICENSE
+  .claude-plugin/plugin.json
+  skills/ship-it/
+    SKILL.md                    # Core skill definition
+    references/                 # 11 reference docs
+  commands/
+    ship-init.md                # Start or adopt a project
+    ship-go.md                  # Autonomous sprint execution
+    ship-decide.md              # Capture decisions
+  hooks/hooks.json              # SessionStart hook
+  hooks-handlers/session-start.sh
 ```
-
-After installation, the skill auto-activates when it detects a `.project/` directory or when any `/ship-*` command is invoked.
 
 ## Design Decisions
 
-- **JSON for state, Markdown for docs.** Models handle structured JSON more reliably than markdown for machine-readable data.
-- **HANDOFF.md is regenerated, never appended.** Appended handoffs accumulate stale context and bloat over time.
-- **Session-sized sprints, not time-boxed.** Sprints are scoped to fit within a Claude Code session, estimated by complexity and dependency depth.
-- **Archive-first adoption.** When adopting an existing project, all original PM artifacts are archived before any reorganization. Source code is never touched.
-- **Docs are memory.** Conversation is ephemeral. The doc suite is what persists. Every document is written to be self-contained and usable without conversational context.
-- **ADRs are immutable.** Once written, an ADR is never edited. If a decision is superseded, a new ADR references the old one.
+- **JSON for state, Markdown for docs.** Models handle structured JSON more reliably for machine-readable data.
+- **HANDOFF.md is regenerated, never appended.** Prevents stale context accumulation.
+- **Session-sized sprints, not time-boxed.** Scoped by complexity and dependency depth.
+- **Superpowers is optional.** Ship-it works standalone but is better with superpowers for execution quality.
+- **Human gates are non-negotiable for architecture decisions.** Autonomous code should not make architectural choices.
+- **Docs are memory.** Conversation is ephemeral. The doc suite persists.
 
 ## License
 
